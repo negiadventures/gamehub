@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tic-Tac-Toe - Game Hub</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    h1 { color: #00ff88; margin-bottom: 10px; font-size: 2rem; text-shadow: 0 0 10px rgba(0, 255, 136, 0.5); }
+    .game-info { margin-bottom: 10px; font-size: 1rem; color: #fff; }
+    .status { margin-bottom: 20px; font-size: 1.3rem; color: #fff; }
+    .status span { color: #00ff88; font-weight: bold; }
+    .board { display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); gap: 10px; }
+    .cell {
+      width: 100px;
+      height: 100px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .cell:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
+    .cell.x { color: #00d4ff; text-shadow: 0 0 10px rgba(0, 212, 255, 0.5); }
+    .cell.o { color: #ff6b6b; text-shadow: 0 0 10px rgba(255, 107, 107, 0.5); }
+    .cell.winner { background: rgba(0, 255, 136, 0.3); border-color: #00ff88; }
+    .buttons { margin-top: 30px; display: flex; gap: 20px; }
+    button {
+      padding: 12px 30px;
+      font-size: 1rem;
+      background: #00ff88;
+      color: #0a0a1a;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    button:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(0, 255, 136, 0.5); }
+    #backBtn { background: #666; color: white; }
+    #backBtn:hover { box-shadow: 0 0 15px rgba(102, 102, 102, 0.5); }
+    #gameMode { padding: 10px; font-size: 1rem; border-radius: 10px; border: none; margin-bottom: 20px; background: #222; color: #fff; }
+    .game-over {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.9);
+      padding: 35px 50px;
+      border-radius: 15px;
+      border: 2px solid #00ff88;
+      text-align: center;
+      display: none;
+    }
+    .game-over h2 { color: #00ff88; font-size: 1.8rem; margin-bottom: 15px; }
+    .game-over p { color: #fff; font-size: 1.1rem; margin-bottom: 15px; }
+    .game-over button { background: #00ff88; color: #0a0a1a; margin: 5px; }
+    #nameInputContainer { margin-bottom: 20px; }
+    #nameInputContainer input { padding: 10px; font-size: 1rem; border-radius: 10px; border: none; width: 200px; text-align: center; }
+    #leaderboardContainer { display: none; margin-bottom: 20px; }
+    .leaderboard-table { width: 100%; color: #fff; border-collapse: collapse; margin-top: 10px; }
+    .leaderboard-table th { color: #00ff88; padding: 8px; border-bottom: 1px solid #444; text-align: left; }
+    .leaderboard-table td { padding: 8px; border-bottom: 1px solid #333; }
+    .leaderboard-table tr:first-child td:first-child { color: #FFD700; }
+    .leaderboard-table tr:nth-child(2) td:first-child { color: #C0C0C0; }
+    .leaderboard-table tr:nth-child(3) td:first-child { color: #CD7F32; }
+  </style>
+</head>
+<body>
+  <h1>Tic-Tac-Toe</h1>
+  <select id="gameMode" style="padding: 10px; font-size: 1rem; border-radius: 10px; border: none; margin-bottom: 20px; background: #222; color: #fff;">
+    <option value="ai">1 Player (vs Computer)</option>
+    <option value="2p">2 Players</option>
+  </select>
+  <div class="game-info">
+    <div>Wins: <span id="wins">0</span> | Draws: <span id="draws">0</span></div>
+  </div>
+  <div class="status" id="status">Player <span>X</span>'s turn</div>
+  <div class="board" id="board"></div>
+  <div class="buttons">
+    <button id="restartBtn">New Game</button>
+    <button id="backBtn">Back to Hub</button>
+  </div>
+  <div class="game-over" id="gameOver">
+    <h2 id="winnerText">X Wins!</h2>
+    <div id="nameInputContainer" style="margin-bottom: 20px;">
+      <input type="text" id="playerName" placeholder="Enter your name" maxlength="15" style="padding: 10px; font-size: 1rem; border-radius: 10px; border: none; width: 200px; text-align: center;">
+    </div>
+    <div id="leaderboardContainer" style="display: none; margin-bottom: 20px;"></div>
+    <button id="submitScoreBtn" style="margin-bottom: 10px;">Submit Score</button>
+    <button id="playAgainBtn">Play Again</button>
+  </div>
+  <script src="leaderboard.js"></script>
+  <script>
+    const boardEl = document.getElementById('board');
+    const statusEl = document.getElementById('status');
+    const winsEl = document.getElementById('wins');
+    const drawsEl = document.getElementById('draws');
+    const restartBtn = document.getElementById('restartBtn');
+    const backBtn = document.getElementById('backBtn');
+    const gameModeSelect = document.getElementById('gameMode');
+    const playerNameInput = document.getElementById('playerName');
+    const submitScoreBtn = document.getElementById('submitScoreBtn');
+    const playAgainBtn = document.getElementById('playAgainBtn');
+    const gameOverDiv = document.getElementById('gameOver');
+    const winnerText = document.getElementById('winnerText');
+    const nameInputContainer = document.getElementById('nameInputContainer');
+    const leaderboardContainer = document.getElementById('leaderboardContainer');
+    const GAME_NAME = 'tictactoe';
+
+    let board = ['', '', '', '', '', '', '', '', ''];
+    let currentPlayer = 'X';
+    let gameActive = true;
+    let isAI = true;
+    let wins = 0, draws = 0;
+
+    winsEl.textContent = wins;
+    drawsEl.textContent = draws;
+
+    const winConditions = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6]
+    ];
+
+    function createBoard() {
+      boardEl.innerHTML = '';
+      board.forEach((cell, index) => {
+        const cellEl = document.createElement('div');
+        cellEl.className = 'cell ' + (cell ? cell.toLowerCase() : '');
+        cellEl.textContent = cell;
+        cellEl.addEventListener('click', () => handleCellClick(index));
+        boardEl.appendChild(cellEl);
+      });
+    }
+
+    function handleCellClick(index) {
+      if (board[index] !== '' || !gameActive) return;
+
+      board[index] = currentPlayer;
+      createBoard();
+
+      if (checkWin()) {
+        endGame(currentPlayer);
+        return;
+      }
+
+      if (!board.includes('')) {
+        endGame('draw');
+        return;
+      }
+
+      currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+      statusEl.innerHTML = `Player <span>${currentPlayer}</span>'s turn`;
+
+      // AI move
+      if (isAI && currentPlayer === 'O' && gameActive) {
+        setTimeout(makeAIMove, 400);
+      }
+    }
+
+    function makeAIMove() {
+      if (!gameActive) return;
+
+      // Try to win
+      let move = findBestMove('O');
+      // Block player
+      if (move === -1) move = findBestMove('X');
+      // Take center
+      if (move === -1 && board[4] === '') move = 4;
+      // Take random empty
+      if (move === -1) {
+        const empty = board.map((v, i) => v === '' ? i : null).filter(v => v !== null);
+        if (empty.length > 0) {
+          move = empty[Math.floor(Math.random() * empty.length)];
+        } else {
+          return;
+        }
+      }
+
+      board[move] = 'O';
+      createBoard();
+
+      if (checkWin()) {
+        endGame('O');
+      } else if (!board.includes('')) {
+        endGame('draw');
+      } else {
+        currentPlayer = 'X';
+        statusEl.innerHTML = `Player <span>${currentPlayer}</span>'s turn`;
+      }
+    }
+
+    function findBestMove(player) {
+      for (let condition of winConditions) {
+        const values = condition.map(i => board[i]);
+        const playerCount = values.filter(v => v === player).length;
+        const emptyCount = values.filter(v => v === '').length;
+        if (playerCount === 2 && emptyCount === 1) {
+          return condition[values.indexOf('')];
+        }
+      }
+      return -1;
+    }
+
+    function checkWin() {
+      return winConditions.some(condition => {
+        return condition.every(index => board[index] === currentPlayer);
+      });
+    }
+
+    function highlightWinner() {
+      winConditions.forEach(condition => {
+        if (condition.every(index => board[index] === currentPlayer)) {
+          condition.forEach(index => {
+            boardEl.children[index].classList.add('winner');
+          });
+        }
+      });
+    }
+
+    function endGame(winner) {
+      gameActive = false;
+      if (winner === 'draw') {
+        winnerText.textContent = "It's a Draw!";
+        draws++;
+        drawsEl.textContent = draws;
+      } else {
+        winnerText.textContent = winner + ' Wins!';
+        wins++;
+        winsEl.textContent = wins;
+        highlightWinner();
+      }
+
+      gameOverDiv.style.display = 'block';
+      nameInputContainer.style.display = 'block';
+      submitScoreBtn.disabled = true;
+      submitScoreBtn.style.opacity = '0.5';
+      // Show leaderboard if there are existing scores
+      const existingLeaderboard = Leaderboard.get(GAME_NAME);
+      if (existingLeaderboard && existingLeaderboard.length > 0) {
+        leaderboardContainer.style.display = 'block';
+        leaderboardContainer.innerHTML = '<h3 style="color: #00ff88; margin-bottom: 10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
+        submitScoreBtn.textContent = 'View Leaderboard';
+        submitScoreBtn.onclick = showLeaderboard;
+      } else {
+        leaderboardContainer.style.display = 'none';
+        submitScoreBtn.textContent = 'Submit Score';
+        submitScoreBtn.onclick = submitScore;
+      }
+    }
+
+    function showLeaderboard() {
+      leaderboardContainer.style.display = 'block';
+      submitScoreBtn.textContent = 'View Leaderboard';
+      submitScoreBtn.onclick = showLeaderboard;
+    }
+
+    function restartGame() {
+      board = ['', '', '', '', '', '', '', '', ''];
+      currentPlayer = 'X';
+      gameActive = true;
+      statusEl.innerHTML = `Player <span>${currentPlayer}</span>'s turn`;
+      gameOverDiv.style.display = 'none';
+      nameInputContainer.style.display = 'block';
+      leaderboardContainer.style.display = 'none';
+      submitScoreBtn.textContent = 'Submit Score';
+      submitScoreBtn.onclick = submitScore;
+      createBoard();
+    }
+
+    function submitScore() {
+      const name = playerNameInput.value.trim();
+      if (!name) return;
+      const leaderboard = Leaderboard.addScore(GAME_NAME, name, wins);
+      nameInputContainer.style.display = 'none';
+      leaderboardContainer.style.display = 'block';
+      leaderboardContainer.innerHTML = '<h3 style="color: #00ff88; margin-bottom: 10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
+      submitScoreBtn.textContent = 'View Leaderboard';
+      submitScoreBtn.onclick = showLeaderboard;
+    }
+
+    function showLeaderboard() {
+      leaderboardContainer.style.display = 'block';
+      submitScoreBtn.textContent = 'View Leaderboard';
+      submitScoreBtn.onclick = showLeaderboard;
+    }
+
+    restartBtn.addEventListener('click', restartGame);
+    playAgainBtn.addEventListener('click', restartGame);
+    backBtn.addEventListener('click', () => window.location.href = 'gamehub.html');
+    submitScoreBtn.addEventListener('click', submitScore);
+    playerNameInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && playerNameInput.value.trim()) submitScore();
+    });
+    playerNameInput.addEventListener('input', () => {
+      submitScoreBtn.disabled = !playerNameInput.value.trim();
+      submitScoreBtn.style.opacity = playerNameInput.value.trim() ? '1' : '0.5';
+    });
+    gameModeSelect.addEventListener('change', () => {
+      isAI = gameModeSelect.value === 'ai';
+      wins = 0; draws = 0;
+      winsEl.textContent = wins;
+      drawsEl.textContent = draws;
+      restartGame();
+    });
+
+    createBoard();
+  </script>
+</body>
+</html>

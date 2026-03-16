@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flappy Bird - Game Hub</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+    }
+    h1 { color: #ff8844; margin-bottom: 10px; font-size: 2rem; text-shadow: 0 0 10px rgba(255, 136, 68, 0.5); }
+    .game-info { display: flex; gap: 30px; margin-bottom: 10px; font-size: 1.1rem; color: #fff; }
+    .game-info span { color: #ff8844; font-weight: bold; }
+    #gameCanvas {
+      border: 3px solid #ff8844;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(255, 136, 68, 0.3);
+      cursor: pointer;
+    }
+    .instructions { margin-top: 15px; color: #aaa; text-align: center; font-size: 0.9rem; }
+    .instructions kbd { background: #333; padding: 3px 8px; border-radius: 4px; border: 1px solid #555; font-family: monospace; color: #ff8844; }
+    #startBtn { margin-top: 15px; padding: 12px 35px; font-size: 1rem; background: #ff8844; color: white; border: none; border-radius: 25px; cursor: pointer; font-weight: bold; }
+    #startBtn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(255, 136, 68, 0.5); }
+    .game-over { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); padding: 35px 50px; border-radius: 15px; border: 2px solid #ff4444; text-align: center; display: none; }
+    .game-over h2 { color: #ff4444; font-size: 1.8rem; margin-bottom: 15px; }
+    .game-over p { color: #fff; font-size: 1.1rem; margin-bottom: 15px; }
+    .game-over button { padding: 10px 25px; font-size: 0.95rem; background: #ff8844; color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; }
+    #backBtn { margin-top: 15px; padding: 10px 25px; font-size: 0.95rem; background: #666; color: white; border: none; border-radius: 20px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Flappy Bird</h1>
+  <div class="game-info">
+    <div>Score: <span id="score">0</span></div>
+    <div>High Score: <span id="highScore">0</span></div>
+  </div>
+  <canvas id="gameCanvas" width="400" height="600"></canvas>
+  <div class="instructions">
+    <p><kbd>Click</kbd> or <kbd>Space</kbd> to flap | Avoid the pipes!</p>
+  </div>
+  <button id="startBtn">Start Game</button>
+  <button id="backBtn">Back to Hub</button>
+  <div class="game-over" id="gameOver">
+    <h2>Game Over!</h2>
+    <p>Score: <span id="finalScore">0</span></p>
+    <div id="nameInputContainer" style="margin-bottom: 20px;">
+      <input type="text" id="playerName" placeholder="Enter your name" maxlength="15" style="padding: 10px; font-size: 1rem; border-radius: 10px; border: none; width: 200px; text-align: center;">
+    </div>
+    <div id="leaderboardContainer" style="display: none; margin-bottom: 20px;"></div>
+    <button id="submitScoreBtn" style="margin-bottom: 10px;">Submit Score</button>
+    <button id="restartBtn">Play Again</button>
+  </div>
+  <script src="leaderboard.js"></script>
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const highScoreEl = document.getElementById('highScore');
+    const finalScoreEl = document.getElementById('finalScore');
+    const gameOverDiv = document.getElementById('gameOver');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const backBtn = document.getElementById('backBtn');
+    const playerNameInput = document.getElementById('playerName');
+    const submitScoreBtn = document.getElementById('submitScoreBtn');
+    const nameInputContainer = document.getElementById('nameInputContainer');
+    const leaderboardContainer = document.getElementById('leaderboardContainer');
+    const GAME_NAME = 'flappy';
+
+    const gravity = 0.25, flapStrength = -5.5, pipeSpeed = 3, pipeGap = 150, pipeSpawnRate = 100;
+
+    let score = 0, highScore = localStorage.getItem('flappyHighScore') || 0;
+    let gameRunning = false, animationId;
+
+    highScoreEl.textContent = highScore;
+
+    const bird = { x: 80, y: 300, radius: 15, velocity: 0, rotation: 0 };
+    let pipes = [];
+    let frameCount = 0;
+
+    function drawRect(x, y, w, h, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, w, h);
+    }
+
+    function drawCircle(x, y, r, color) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    function draw() {
+      ctx.fillStyle = '#70c5ce';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#e8f4f8';
+      for (let i = 0; i < 5; i++) {
+        const x = ((i * 100) - frameCount * 0.2) % (canvas.width + 200);
+        const adjustedX = x < -100 ? x + canvas.width + 200 : x;
+        drawCircle(adjustedX, 100 + i * 50, 30 + i * 5, ctx.fillStyle);
+      }
+
+      pipes.forEach(pipe => {
+        ctx.fillStyle = '#4CAF50';
+        drawRect(pipe.x, 0, pipe.width, pipe.top, '#5D9C59');
+        drawRect(pipe.x, canvas.height - pipe.bottom, pipe.width, pipe.bottom, '#5D9C59');
+
+        ctx.fillStyle = '#3D8B40';
+        drawRect(pipe.x + pipe.width - 5, 0, 5, pipe.top, '#3D8B40');
+        drawRect(pipe.x + pipe.width - 5, canvas.height - pipe.bottom, 5, pipe.bottom, '#3D8B40');
+      });
+
+      ctx.save();
+      ctx.translate(bird.x, bird.y);
+      bird.rotation = Math.min(Math.max(bird.velocity * 0.1, -0.5), 0.5);
+      ctx.rotate(bird.rotation);
+      drawCircle(0, 0, bird.radius, '#FFD700');
+      drawCircle(5, -5, 8, '#fff');
+      drawCircle(7, -5, 3, '#000');
+      drawCircle(5, 5, 6, '#FF6B35');
+      ctx.restore();
+
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 48px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(score, canvas.width/2, 80);
+    }
+
+    function update() {
+      frameCount++;
+
+      bird.velocity += gravity;
+      bird.y += bird.velocity;
+
+      if (frameCount % pipeSpawnRate === 0) {
+        const minHeight = 50;
+        const maxHeight = canvas.height - pipeGap - minHeight;
+        const topHeight = Math.floor(Math.random() * (maxHeight - minHeight + 1)) + minHeight;
+        pipes.push({ x: canvas.width, width: 60, top: topHeight, bottom: canvas.height - pipeGap - topHeight, passed: false });
+      }
+
+      pipes.forEach(pipe => {
+        pipe.x -= pipeSpeed;
+
+        if (bird.x + bird.radius > pipe.x && bird.x - bird.radius < pipe.x + pipe.width) {
+          if (bird.y - bird.radius < pipe.top || bird.y + bird.radius > canvas.height - pipe.bottom) {
+            endGame();
+          }
+        }
+
+        if (!pipe.passed && bird.x > pipe.x + pipe.width) {
+          pipe.passed = true;
+          score++;
+          scoreEl.textContent = score;
+        }
+      });
+
+      pipes = pipes.filter(pipe => pipe.x + pipe.width > -10);
+
+      if (bird.y + bird.radius > canvas.height || bird.y - bird.radius < 0) {
+        endGame();
+      }
+    }
+
+    function gameLoop() {
+      if (!gameRunning) return;
+      update();
+      draw();
+      animationId = requestAnimationFrame(gameLoop);
+    }
+
+    function endGame() {
+      gameRunning = false;
+      cancelAnimationFrame(animationId);
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('flappyHighScore', highScore);
+        highScoreEl.textContent = highScore;
+      }
+      finalScoreEl.textContent = score;
+      gameOverDiv.style.display = 'block';
+      startBtn.style.display = 'none';
+
+      playerNameInput.value = '';
+      nameInputContainer.style.display = 'block';
+      submitScoreBtn.disabled = true;
+      submitScoreBtn.style.opacity = '0.5';
+      // Show leaderboard if there are existing scores
+      const existingLeaderboard = Leaderboard.get(GAME_NAME);
+      if (existingLeaderboard && existingLeaderboard.length > 0) {
+        leaderboardContainer.style.display = 'block';
+        leaderboardContainer.innerHTML = '<h3 style="color: #ff8844; margin-bottom: 10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
+        submitScoreBtn.textContent = 'View Leaderboard';
+        submitScoreBtn.onclick = showLeaderboard;
+      } else {
+        leaderboardContainer.style.display = 'none';
+        submitScoreBtn.textContent = 'Submit Score';
+        submitScoreBtn.onclick = submitScore;
+      }
+    }
+
+    function showLeaderboard() {
+      leaderboardContainer.style.display = 'block';
+      submitScoreBtn.textContent = 'View Leaderboard';
+      submitScoreBtn.onclick = showLeaderboard;
+    }
+
+    function flap() {
+      if (gameRunning) bird.velocity = flapStrength;
+    }
+
+    function startGame() {
+      score = 0;
+      pipes = [];
+      frameCount = 0;
+      bird.y = 300;
+      bird.velocity = 0;
+      scoreEl.textContent = '0';
+      gameOverDiv.style.display = 'none';
+      startBtn.style.display = 'inline-block';
+      gameRunning = true;
+      gameLoop();
+    }
+
+    canvas.addEventListener('click', () => { if (gameRunning) flap(); else if (gameOverDiv.style.display === 'none') startGame(); });
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (!gameRunning && gameOverDiv.style.display === 'none') startGame();
+        else if (gameRunning) flap();
+      }
+    });
+    startBtn.addEventListener('click', startGame);
+    restartBtn.addEventListener('click', startGame);
+    backBtn.addEventListener('click', () => window.location.href = 'gamehub.html');
+    submitScoreBtn.addEventListener('click', submitScore);
+    playerNameInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && playerNameInput.value.trim()) submitScore();
+    });
+    playerNameInput.addEventListener('input', () => {
+      submitScoreBtn.disabled = !playerNameInput.value.trim();
+      submitScoreBtn.style.opacity = playerNameInput.value.trim() ? '1' : '0.5';
+    });
+
+    function submitScore() {
+      const name = playerNameInput.value.trim();
+      if (!name) return;
+      const leaderboard = Leaderboard.addScore(GAME_NAME, name, score);
+      nameInputContainer.style.display = 'none';
+      leaderboardContainer.style.display = 'block';
+      leaderboardContainer.innerHTML = '<h3 style="color: #ff8844; margin-bottom: 10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
+      submitScoreBtn.textContent = 'View Leaderboard';
+      submitScoreBtn.onclick = showLeaderboard;
+    }
+
+    function showLeaderboard() {
+      leaderboardContainer.style.display = 'block';
+      submitScoreBtn.textContent = 'View Leaderboard';
+      submitScoreBtn.onclick = showLeaderboard;
+    }
+
+    draw();
+  </script>
+</body>
+</html>

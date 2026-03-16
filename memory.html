@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Memory Game - Game Hub</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    h1 { color: #ff6b6b; margin-bottom: 10px; font-size: 2rem; text-shadow: 0 0 10px rgba(255, 107, 107, 0.5); }
+    .game-info { display: flex; gap: 30px; margin-bottom: 20px; font-size: 1.1rem; color: #fff; }
+    .game-info span { color: #ff6b6b; font-weight: bold; }
+    .board { display: grid; grid-template-columns: repeat(4, 80px); gap: 10px; }
+    .card {
+      width: 80px;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      transform-style: preserve-3d;
+    }
+    .card.flipped { background: rgba(255, 255, 255, 0.2); transform: rotateY(180deg); }
+    .card.matched { background: rgba(0, 255, 136, 0.3); border-color: #00ff88; animation: pulse 0.5s; }
+    @keyframes pulse { 0%, 100% { transform: rotateY(180deg) scale(1); } 50% { transform: rotateY(180deg) scale(1.1); } }
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+    }
+    .card-front { transform: rotateY(180deg); }
+    .card-back { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .buttons { margin-top: 30px; display: flex; gap: 20px; }
+    button {
+      padding: 12px 30px;
+      font-size: 1rem;
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    button:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 107, 107, 0.5); }
+    #backBtn { background: #666; }
+    #backBtn:hover { box-shadow: 0 0 15px rgba(102, 102, 102, 0.5); }
+    .game-over {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.9);
+      padding: 35px 50px;
+      border-radius: 15px;
+      border: 2px solid #00ff88;
+      text-align: center;
+      display: none;
+    }
+    .game-over h2 { color: #00ff88; font-size: 1.8rem; margin-bottom: 15px; }
+    .game-over p { color: #fff; font-size: 1.1rem; margin-bottom: 15px; }
+    .game-over button { background: #00ff88; color: #0a0a1a; }
+  </style>
+</head>
+<body>
+  <h1>Memory Game</h1>
+  <div class="game-info">
+    <div>Moves: <span id="moves">0</span></div>
+    <div>Time: <span id="time">0:00</span></div>
+  </div>
+  <div class="board" id="board"></div>
+  <div class="buttons">
+    <button id="restartBtn">New Game</button>
+    <button id="backBtn">Back to Hub</button>
+  </div>
+  <div class="game-over" id="gameOver">
+    <h2>Congratulations!</h2>
+    <div id="nameInputContainer" style="margin-bottom: 20px;">
+      <input type="text" id="playerName" placeholder="Enter your name" maxlength="15" style="padding: 10px; font-size: 1rem; border-radius: 10px; border: none; width: 200px; text-align: center;">
+    </div>
+    <div id="leaderboardContainer" style="display: none; margin-bottom: 20px;"></div>
+    <button id="submitScoreBtn" style="margin-bottom: 10px;">Submit Score</button>
+    <button id="playAgainBtn">Play Again</button>
+  </div>
+  <script src="leaderboard.js"></script>
+  <script>
+    const playerNameInput = document.getElementById('playerName');
+    const submitScoreBtn = document.getElementById('submitScoreBtn');
+    const nameInputContainer = document.getElementById('nameInputContainer');
+    const leaderboardContainer = document.getElementById('leaderboardContainer');
+    const GAME_NAME = 'memory';
+    const boardEl = document.getElementById('board');
+    const movesEl = document.getElementById('moves');
+    const timeEl = document.getElementById('time');
+    const gameOverDiv = document.getElementById('gameOver');
+    const finalMovesEl = document.getElementById('finalMoves');
+    const finalTimeEl = document.getElementById('finalTime');
+    const restartBtn = document.getElementById('restartBtn');
+    const playAgainBtn = document.getElementById('playAgainBtn');
+    const backBtn = document.getElementById('backBtn');
+
+    const emojis = ['🍎', '🍌', '🍇', '🍓', '🍒', '🍑', '🍍', '🥝'];
+    let cards = [];
+    let flippedCards = [];
+    let matchedPairs = 0;
+    let moves = 0;
+    let gameActive = false;
+    let timerInterval;
+    let seconds = 0;
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function formatTime(secs) {
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+      seconds = 0;
+      timeEl.textContent = '0:00';
+      timerInterval = setInterval(() => {
+        seconds++;
+        timeEl.textContent = formatTime(seconds);
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+    }
+
+    function createBoard() {
+      const gameCards = shuffle([...emojis, ...emojis]);
+      boardEl.innerHTML = '';
+      cards = gameCards.map((emoji, index) => ({ emoji, index, matched: false }));
+
+      cards.forEach((card, i) => {
+        const cardEl = document.createElement('div');
+        cardEl.className = 'card';
+        cardEl.dataset.index = i;
+        cardEl.innerHTML = `
+          <div class="card-front">${card.emoji}</div>
+          <div class="card-back">?</div>
+        `;
+        cardEl.addEventListener('click', () => flipCard(i, cardEl));
+        boardEl.appendChild(cardEl);
+      });
+    }
+
+    function flipCard(index, cardEl) {
+      if (!gameActive || flippedCards.length >= 2 || cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
+
+      cardEl.classList.add('flipped');
+      flippedCards.push({ index, element: cardEl, emoji: cards[index].emoji });
+
+      if (flippedCards.length === 2) {
+        moves++;
+        movesEl.textContent = moves;
+        checkMatch();
+      }
+    }
+
+    function checkMatch() {
+      const [card1, card2] = flippedCards;
+
+      if (card1.emoji === card2.emoji) {
+        card1.element.classList.add('matched');
+        card2.element.classList.add('matched');
+        cards[card1.index].matched = true;
+        cards[card2.index].matched = true;
+        matchedPairs++;
+        flippedCards = [];
+
+        if (matchedPairs === emojis.length) {
+          endGame();
+        }
+      } else {
+        setTimeout(() => {
+          card1.element.classList.remove('flipped');
+          card2.element.classList.remove('flipped');
+          flippedCards = [];
+        }, 1000);
+      }
+    }
+
+    function endGame() {
+      gameActive = false;
+      stopTimer();
+      finalMovesEl.textContent = moves;
+      finalTimeEl.textContent = formatTime(seconds);
+      gameOverDiv.style.display = 'block';
+      playerNameInput.value = '';
+      nameInputContainer.style.display = 'block';
+      submitScoreBtn.disabled = true;
+      submitScoreBtn.style.opacity = '0.5';
+      // Show leaderboard if there are existing scores
+      const existingLeaderboard = Leaderboard.get(GAME_NAME);
+      if (existingLeaderboard && existingLeaderboard.length > 0) {
+        leaderboardContainer.style.display = 'block';
+        leaderboardContainer.innerHTML = '<h3 style="color: #ff6b6b; margin-bottom: 10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
+        submitScoreBtn.textContent = 'View Leaderboard';
+        submitScoreBtn.onclick = showLeaderboard;
+      } else {
+        leaderboardContainer.style.display = 'none';
+        submitScoreBtn.textContent = 'Submit Score';
+        submitScoreBtn.onclick = submitScore;
+      }
+    }
+
+    function showLeaderboard() {
+      leaderboardContainer.style.display = 'block';
+      submitScoreBtn.textContent = 'View Leaderboard';
+      submitScoreBtn.onclick = showLeaderboard;
+    }
+
+    function newGame() {
+      gameActive = true;
+      matchedPairs = 0;
+      moves = 0;
+      flippedCards = [];
+      movesEl.textContent = '0';
+      gameOverDiv.style.display = 'none';
+      nameInputContainer.style.display = 'block';
+      leaderboardContainer.style.display = 'none';
+      submitScoreBtn.textContent = 'Submit Score';
+      submitScoreBtn.onclick = submitScore;
+      createBoard();
+      startTimer();
+    }
+
+    restartBtn.addEventListener('click', newGame);
+    playAgainBtn.addEventListener('click', newGame);
+    backBtn.addEventListener('click', () => window.location.href = 'gamehub.html');
+    submitScoreBtn.addEventListener('click', submitScore);
+    playerNameInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && playerNameInput.value.trim()) submitScore();
+    });
+    playerNameInput.addEventListener('input', () => {
+      submitScoreBtn.disabled = !playerNameInput.value.trim();
+      submitScoreBtn.style.opacity = playerNameInput.value.trim() ? '1' : '0.5';
+    });
+
+    function submitScore() {
+      const name = playerNameInput.value.trim();
+      if (!name) return;
+      const leaderboard = Leaderboard.addScore(GAME_NAME, name, moves);
+      nameInputContainer.style.display = 'none';
+      leaderboardContainer.style.display = 'block';
+      leaderboardContainer.innerHTML = '<h3 style="color: #ff6b6b; margin-bottom: 10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
+      submitScoreBtn.textContent = 'View Leaderboard';
+      submitScoreBtn.onclick = showLeaderboard;
+    }
+
+    function showLeaderboard() {
+      leaderboardContainer.style.display = 'block';
+      submitScoreBtn.textContent = 'View Leaderboard';
+      submitScoreBtn.onclick = showLeaderboard;
+    }
+
+    createBoard();
+  </script>
+</body>
+</html>

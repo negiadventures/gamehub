@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Breakout - Game Hub</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+    }
+    h1 { color: #00d4ff; margin-bottom: 10px; font-size: 2rem; text-shadow: 0 0 10px rgba(0, 212, 255, 0.5); }
+    .game-info { display: flex; gap: 30px; margin-bottom: 10px; font-size: 1.1rem; color: #fff; }
+    .game-info span { color: #00d4ff; font-weight: bold; }
+    #gameCanvas {
+      border: 3px solid #00d4ff;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+      cursor: none;
+    }
+    .instructions { margin-top: 15px; color: #aaa; text-align: center; font-size: 0.9rem; }
+    .instructions kbd { background: #333; padding: 3px 8px; border-radius: 4px; border: 1px solid #555; font-family: monospace; color: #00d4ff; }
+    #startBtn { margin-top: 15px; padding: 12px 35px; font-size: 1rem; background: #00d4ff; color: #0c0c0c; border: none; border-radius: 25px; cursor: pointer; font-weight: bold; }
+    #startBtn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 212, 255, 0.5); }
+    .game-over { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); padding: 35px 50px; border-radius: 15px; border: 2px solid #ff4444; text-align: center; display: none; }
+    .game-over h2 { color: #ff4444; font-size: 1.8rem; margin-bottom: 15px; }
+    .game-over p { color: #fff; font-size: 1.1rem; margin-bottom: 15px; }
+    .game-over button { padding: 10px 25px; font-size: 0.95rem; background: #00d4ff; color: #0c0c0c; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; }
+    #backBtn { margin-top: 15px; padding: 10px 25px; font-size: 0.95rem; background: #666; color: white; border: none; border-radius: 20px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Breakout</h1>
+  <div class="game-info">
+    <div>Score: <span id="score">0</span></div>
+    <div>High Score: <span id="highScore">0</span></div>
+    <div>Level: <span id="level">1</span></div>
+  </div>
+  <canvas id="gameCanvas" width="700" height="500"></canvas>
+  <div class="instructions">
+    <p><kbd>Left</kbd>/<kbd>Right</kbd> or Mouse to move | Click or <kbd>Space</kbd> to start</p>
+  </div>
+  <button id="startBtn">Start Game</button>
+  <button id="backBtn">Back to Hub</button>
+  <div class="game-over" id="gameOver">
+    <h2 id="gameOverText">Game Over!</h2>
+    <p>Score: <span id="finalScore">0</span></p>
+    <div id="nameInputContainer" style="margin-bottom: 20px;">
+      <input type="text" id="playerName" placeholder="Enter your name" maxlength="15" style="padding: 10px; font-size: 1rem; border-radius: 10px; border: none; width: 200px; text-align: center;">
+    </div>
+    <div id="leaderboardContainer" style="display: none; margin-bottom: 20px;"></div>
+    <button id="submitScoreBtn" style="margin-bottom: 10px;">Submit Score</button>
+    <button id="restartBtn">Play Again</button>
+  </div>
+  <script src="leaderboard.js"></script>
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const highScoreEl = document.getElementById('highScore');
+    const levelEl = document.getElementById('level');
+    const gameOverDiv = document.getElementById('gameOver');
+    const gameOverText = document.getElementById('gameOverText');
+    const finalScoreEl = document.getElementById('finalScore');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const backBtn = document.getElementById('backBtn');
+    const playerNameInput = document.getElementById('playerName');
+    const submitScoreBtn = document.getElementById('submitScoreBtn');
+    const nameInputContainer = document.getElementById('nameInputContainer');
+    const leaderboardContainer = document.getElementById('leaderboardContainer');
+    const GAME_NAME = 'breakout';
+
+    const paddleWidth = 100, paddleHeight = 15;
+    const ballSize = 8;
+    const brickRowCount = 5, brickColCount = 9;
+    const brickPadding = 10, brickOffsetTop = 50, brickOffsetLeft = 35;
+    const brickWidth = 65, brickHeight = 20;
+
+    let score = 0, highScore = localStorage.getItem('breakoutHighScore') || 0;
+    let level = 1, gameRunning = false, animationId;
+
+    highScoreEl.textContent = highScore;
+
+    const paddle = { x: canvas.width/2 - paddleWidth/2, width: paddleWidth, height: paddleHeight, dy: 0 };
+    const ball = { x: canvas.width/2, y: canvas.height - 50, dx: 4, dy: -4, speed: 5 };
+
+    let bricks = [];
+
+    function initBricks() {
+      bricks = [];
+      const colors = ['#ff4444', '#ff8844', '#ffdd44', '#44ff44', '#4488ff'];
+      for (let c = 0; c < brickColCount; c++) {
+        for (let r = 0; r < brickRowCount; r++) {
+          bricks.push({ x: c * (brickWidth + brickPadding) + brickOffsetLeft, y: r * (brickHeight + brickPadding) + brickOffsetTop, status: 1, color: colors[r] });
+        }
+      }
+    }
+
+    function drawRect(x, y, w, h, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, w, h);
+    }
+
+    function drawCircle(x, y, r, color) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    function draw() {
+      ctx.fillStyle = '#0a0a1a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw bricks
+      bricks.forEach(b => {
+        if (b.status === 1) drawRect(b.x, b.y, brickWidth, brickHeight, b.color);
+      });
+
+      // Draw paddle
+      drawRect(paddle.x, canvas.height - paddleHeight - 10, paddle.width, paddle.height, '#00d4ff');
+
+      // Draw ball
+      drawCircle(ball.x, ball.y, ballSize, '#fff');
+    }
+
+    function update() {
+      paddle.x += paddle.dy;
+      paddle.x = Math.max(0, Math.min(canvas.width - paddle.width, paddle.x));
+
+      ball.x += ball.dx;
+      ball.y += ball.dy;
+
+      if (ball.x <= 0 || ball.x >= canvas.width) ball.dx *= -1;
+      if (ball.y <= 0) ball.dy *= -1;
+
+      if (ball.x > paddle.x && ball.x < paddle.x + paddle.width && ball.y + ballSize >= canvas.height - paddleHeight - 10 && ball.dy > 0) {
+        ball.dy *= -1;
+        const hitPos = (ball.x - paddle.x) / paddle.width - 0.5;
+        ball.dx = hitPos * 8;
+        ball.speed = Math.min(ball.speed + 0.1, 10);
+      }
+
+      if (ball.y > canvas.height) {
+        endGame(false);
+        return;
+      }
+
+      bricks.forEach(b => {
+        if (b.status === 1) {
+          if (ball.x > b.x && ball.x < b.x + brickWidth && ball.y > b.y && ball.y < b.y + brickHeight) {
+            ball.dy *= -1;
+            b.status = 0;
+            score += 10;
+            scoreEl.textContent = score;
+            if (score % 100 === 0) {
+              level++;
+              levelEl.textContent = level;
+              ball.speed = Math.min(ball.speed + 1, 12);
+              ball.dx *= 1.1;
+              ball.dy *= 1.1;
+            }
+          }
+        }
+      });
+
+      if (bricks.every(b => b.status === 0)) {
+        endGame(true);
+      }
+    }
+
+    function gameLoop() {
+      if (!gameRunning) return;
+      update();
+      draw();
+      animationId = requestAnimationFrame(gameLoop);
+    }
+
+    function endGame(win) {
+      gameRunning = false;
+      cancelAnimationFrame(animationId);
+      gameOverText.textContent = win ? 'You Win!' : 'Game Over!';
+      finalScoreEl.textContent = score;
+      gameOverDiv.style.display = 'block';
+      startBtn.style.display = 'none';
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('breakoutHighScore', highScore);
+        highScoreEl.textContent = highScore;
+      }
+
+      playerNameInput.value = '';
+      nameInputContainer.style.display = 'block';
+      submitScoreBtn.disabled = true;
+      submitScoreBtn.style.opacity = '0.5';
+      // Show leaderboard if there are existing scores
+      const existingLeaderboard = Leaderboard.get(GAME_NAME);
+      if (existingLeaderboard && existingLeaderboard.length > 0) {
+        leaderboardContainer.style.display = 'block';
+        leaderboardContainer.innerHTML = '<h3 style="color: #00d4ff; margin-bottom: 10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
+        submitScoreBtn.textContent = 'View Leaderboard';
+        submitScoreBtn.onclick = showLeaderboard;
+      } else {
+        leaderboardContainer.style.display = 'none';
+        submitScoreBtn.textContent = 'Submit Score';
+        submitScoreBtn.onclick = submitScore;
+      }
+    }
+
+    function showLeaderboard() {
+      leaderboardContainer.style.display = 'block';
+      submitScoreBtn.textContent = 'View Leaderboard';
+      submitScoreBtn.onclick = showLeaderboard;
+    }
+
+    function startGame() {
+      score = 0; level = 1;
+      scoreEl.textContent = '0'; levelEl.textContent = '1';
+      gameOverDiv.style.display = 'none';
+      startBtn.style.display = 'inline-block';
+      initBricks();
+      paddle.x = canvas.width/2 - paddleWidth/2;
+      ball.x = canvas.width/2;
+      ball.y = canvas.height - 50;
+      ball.dx = 4 * (Math.random() > 0.5 ? 1 : -1);
+      ball.dy = -4;
+      ball.speed = 5;
+      gameRunning = true;
+      gameLoop();
+    }
+
+    const keys = {};
+    document.addEventListener('keydown', e => {
+      keys[e.key] = true;
+      if(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key===' ') e.preventDefault();
+    });
+    document.addEventListener('keyup', e => keys[e.key] = false);
+
+    function handleInput() {
+      if (!gameRunning) return;
+      paddle.dy = 0;
+      if (keys['ArrowLeft']) paddle.dy = -7;
+      if (keys['ArrowRight']) paddle.dy = 7;
+    }
+
+    canvas.addEventListener('mousemove', e => {
+      const rect = canvas.getBoundingClientRect();
+      paddle.x = e.clientX - rect.left - paddle.width/2;
+    });
+
+    canvas.addEventListener('click', () => { if (!gameRunning && gameOverDiv.style.display === 'none') startGame(); });
+    document.addEventListener('keydown', e => { if (e.code === 'Space' && !gameRunning && gameOverDiv.style.display === 'none') startGame(); });
+
+    setInterval(handleInput, 16);
+    startBtn.addEventListener('click', startGame);
+    restartBtn.addEventListener('click', startGame);
+    backBtn.addEventListener('click', () => window.location.href = 'gamehub.html');
+    submitScoreBtn.addEventListener('click', submitScore);
+    playerNameInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && playerNameInput.value.trim()) submitScore();
+    });
+    playerNameInput.addEventListener('input', () => {
+      submitScoreBtn.disabled = !playerNameInput.value.trim();
+      submitScoreBtn.style.opacity = playerNameInput.value.trim() ? '1' : '0.5';
+    });
+
+    function submitScore() {
+      const name = playerNameInput.value.trim();
+      if (!name) return;
+      const leaderboard = Leaderboard.addScore(GAME_NAME, name, score);
+      nameInputContainer.style.display = 'none';
+      leaderboardContainer.style.display = 'block';
+      leaderboardContainer.innerHTML = '<h3 style="color: #00d4ff; margin-bottom: 10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
+      submitScoreBtn.textContent = 'View Leaderboard';
+      submitScoreBtn.onclick = showLeaderboard;
+    }
+
+    function showLeaderboard() {
+      leaderboardContainer.style.display = 'block';
+      submitScoreBtn.textContent = 'View Leaderboard';
+      submitScoreBtn.onclick = showLeaderboard;
+    }
+
+    initBricks();
+    draw();
+  </script>
+</body>
+</html>

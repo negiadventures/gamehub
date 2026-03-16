@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Space Invaders - Game Hub</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+    }
+    h1 { color: #aa44ff; margin-bottom: 10px; font-size: 2rem; text-shadow: 0 0 10px rgba(170, 68, 255, 0.5); }
+    .game-info { display: flex; gap: 30px; margin-bottom: 10px; font-size: 1.1rem; color: #fff; }
+    .game-info span { color: #aa44ff; font-weight: bold; }
+    #gameCanvas {
+      border: 3px solid #aa44ff;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(170, 68, 255, 0.3);
+      cursor: none;
+    }
+    .instructions { margin-top: 15px; color: #aaa; text-align: center; font-size: 0.9rem; }
+    .instructions kbd { background: #333; padding: 3px 8px; border-radius: 4px; border: 1px solid #555; font-family: monospace; color: #aa44ff; }
+    #startBtn { margin-top: 15px; padding: 12px 35px; font-size: 1rem; background: #aa44ff; color: white; border: none; border-radius: 25px; cursor: pointer; font-weight: bold; }
+    #startBtn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(170, 68, 255, 0.5); }
+    .game-over { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); padding: 35px 50px; border-radius: 15px; border: 2px solid #ff4444; text-align: center; display: none; }
+    .game-over h2 { color: #ff4444; font-size: 1.8rem; margin-bottom: 15px; }
+    .game-over p { color: #fff; font-size: 1.1rem; margin-bottom: 15px; }
+    .game-over button { padding: 10px 25px; font-size: 0.95rem; background: #aa44ff; color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; }
+    #backBtn { margin-top: 15px; padding: 10px 25px; font-size: 0.95rem; background: #666; color: white; border: none; border-radius: 20px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Space Invaders</h1>
+  <div class="game-info">
+    <div>Score: <span id="score">0</span></div>
+    <div>High Score: <span id="highScore">0</span></div>
+    <div>Level: <span id="level">1</span></div>
+  </div>
+  <canvas id="gameCanvas" width="600" height="500"></canvas>
+  <div class="instructions">
+    <p><kbd>Left</kbd>/<kbd>Right</kbd> to move | <kbd>Space</kbd> to shoot | <kbd>P</kbd> to pause</p>
+  </div>
+  <button id="startBtn">Start Game</button>
+  <button id="backBtn">Back to Hub</button>
+  <div class="game-over" id="gameOver">
+    <h2 id="gameOverText">Game Over!</h2>
+    <p>Score: <span id="finalScore">0</span></p>
+    <div id="nameInputContainer" style="margin-bottom: 20px;">
+      <input type="text" id="playerName" placeholder="Enter your name" maxlength="15" style="padding: 10px; font-size: 1rem; border-radius: 10px; border: none; width: 200px; text-align: center;">
+    </div>
+    <div id="leaderboardContainer" style="display: none; margin-bottom: 20px;"></div>
+    <button id="submitScoreBtn" style="margin-bottom: 10px;">Submit Score</button>
+    <button id="restartBtn">Play Again</button>
+  </div>
+  <div class="pause-overlay" id="pauseOverlay">PAUSED</div>
+  <script src="leaderboard.js"></script>
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const highScoreEl = document.getElementById('highScore');
+    const levelEl = document.getElementById('level');
+    const gameOverDiv = document.getElementById('gameOver');
+    const gameOverText = document.getElementById('gameOverText');
+    const finalScoreEl = document.getElementById('finalScore');
+    const pauseOverlay = document.getElementById('pauseOverlay');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const backBtn = document.getElementById('backBtn');
+    const playerNameInput = document.getElementById('playerName');
+    const submitScoreBtn = document.getElementById('submitScoreBtn');
+    const nameInputContainer = document.getElementById('nameInputContainer');
+    const leaderboardContainer = document.getElementById('leaderboardContainer');
+    const GAME_NAME = 'spaceinvaders';
+
+    const playerWidth = 50, playerHeight = 20;
+    const bulletWidth = 4, bulletHeight = 10;
+    const alienWidth = 30, alienHeight = 20;
+    const alienRows = 4, alienCols = 8;
+    const alienPadding = 15, alienOffsetTop = 50, alienOffsetLeft = 40;
+
+    let score = 0, highScore = localStorage.getItem('spaceInvadersHighScore') || 0;
+    let level = 1, gameRunning = false, isPaused = false, animationId;
+
+    highScoreEl.textContent = highScore;
+
+    const player = { x: canvas.width/2 - playerWidth/2, y: canvas.height - 40, speed: 5, dx: 0 };
+    let bullets = [];
+    let aliens = [];
+    let alienDirection = 1;
+    let alienSpeed = 1;
+    let alienDrop = false;
+
+    function initAliens() {
+      aliens = [];
+      const colors = ['#44ff44', '#44ff88', '#88ff44', '#aaff44'];
+      for (let r = 0; r < alienRows; r++) {
+        for (let c = 0; c < alienCols; c++) {
+          aliens.push({ x: c * (alienWidth + alienPadding) + alienOffsetLeft, y: r * (alienHeight + alienPadding) + alienOffsetTop, alive: true, color: colors[r] });
+        }
+      }
+    }
+
+    function drawRect(x, y, w, h, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, w, h);
+    }
+
+    function draw() {
+      ctx.fillStyle = '#0a0a1a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw stars
+      ctx.fillStyle = '#fff';
+      for (let i = 0; i < 30; i++) {
+        const x = ((i * 73) % canvas.width);
+        const y = ((i * 47 + frameCount) % canvas.height);
+        ctx.fillRect(x, y, 2, 2);
+      }
+
+      // Draw player
+      drawRect(player.x, player.y, playerWidth, playerHeight, '#aa44ff');
+      drawRect(player.x + 18, player.y - 10, 14, 10, '#cc88ff');
+
+      // Draw bullets
+      ctx.fillStyle = '#ffdd44';
+      bullets.forEach(b => drawRect(b.x, b.y, bulletWidth, bulletHeight, '#ffdd44'));
+
+      // Draw aliens
+      aliens.forEach(a => {
+        if (a.alive) {
+          drawRect(a.x, a.y, alienWidth, alienHeight, a.color);
+          drawRect(a.x + 5, a.y + 5, 5, 5, '#000');
+          drawRect(a.x + alienWidth - 10, a.y + 5, 5, 5, '#000');
+        }
+      });
+
+      if (isPaused) pauseOverlay.style.display = 'block';
+      else pauseOverlay.style.display = 'none';
+    }
+
+    let frameCount = 0;
+    function update() {
+      frameCount++;
+
+      player.x += player.dx;
+      player.x = Math.max(0, Math.min(canvas.width - playerWidth, player.x));
+
+      bullets.forEach(b => b.y -= 7);
+      bullets = bullets.filter(b => b.y > -10);
+
+      if (frameCount % 60 === 0) {
+        alienSpeed = 1 + level * 0.3;
+        alienDirection *= -1;
+      }
+
+      let shouldDrop = false;
+      aliens.forEach(a => {
+        if (a.alive) {
+          a.x += alienSpeed * alienDirection;
+          if ((alienDirection === 1 && a.x + alienWidth > canvas.width - 10) || (alienDirection === -1 && a.x < 10)) shouldDrop = true;
+
+          if (a.y + alienHeight >= player.y) endGame(false);
+        }
+      });
+
+      if (shouldDrop) {
+        alienDirection *= -1;
+        aliens.forEach(a => { if (a.alive) a.y += 20; });
+      }
+
+      bullets.forEach(b => {
+        aliens.forEach(a => {
+          if (a.alive && b.x < a.x + alienWidth && b.x + bulletWidth > a.x && b.y < a.y + alienHeight && b.y + bulletHeight > a.y) {
+            a.alive = false;
+            b.hit = true;
+            score += 10 * level;
+            scoreEl.textContent = score;
+          }
+        });
+      });
+
+      bullets = bullets.filter(b => !b.hit && b.y > -10);
+
+      if (aliens.every(a => !a.alive)) {
+        level++;
+        levelEl.textContent = level;
+        initAliens();
+        alienSpeed = 1 + level * 0.3;
+        bullets = [];
+      }
+
+      if (frameCount % 120 === 0 && Math.random() < 0.3) {
+        aliens.filter(a => a.alive).forEach(a => {
+          if (Math.random() < 0.3) {
+            bullets.push({ x: a.x + alienWidth/2, y: a.y + alienHeight, hit: false });
+          }
+        });
+      }
+
+      bullets.forEach(b => {
+        aliens.forEach(a => {
+          if (a.alive && b.x < a.x + alienWidth && b.x + bulletWidth > a.x && b.y < a.y + alienHeight && b.y + bulletHeight > a.y) {
+            a.alive = false;
+            b.hit = true;
+            score += 10 * level;
+            scoreEl.textContent = score;
+          }
+        });
+      });
+    }
+
+    function gameLoop() {
+      if (!gameRunning || isPaused) return;
+      update();
+      draw();
+      animationId = requestAnimationFrame(gameLoop);
+    }
+
+    function endGame(win) {
+      gameRunning = false;
+      cancelAnimationFrame(animationId);
+      gameOverText.textContent = win ? 'You Win!' : 'Game Over!';
+      finalScoreEl.textContent = score;
+      gameOverDiv.style.display = 'block';
+      startBtn.style.display = 'none';
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('spaceInvadersHighScore', highScore);
+        highScoreEl.textContent = highScore;
+      }
+
+      playerNameInput.value = '';
+      nameInputContainer.style.display = 'block';
+      submitScoreBtn.disabled = true;
+      submitScoreBtn.style.opacity = '0.5';
+      // Show leaderboard if there are existing scores
+      const existingLeaderboard = Leaderboard.get(GAME_NAME);
+      if (existingLeaderboard && existingLeaderboard.length > 0) {
+        leaderboardContainer.style.display = 'block';
+        leaderboardContainer.innerHTML = '<h3 style="color: #aa44ff; margin-bottom: 10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
+        submitScoreBtn.textContent = 'View Leaderboard';
+        submitScoreBtn.onclick = showLeaderboard;
+      } else {
+        leaderboardContainer.style.display = 'none';
+        submitScoreBtn.textContent = 'Submit Score';
+        submitScoreBtn.onclick = submitScore;
+      }
+    }
+
+    function showLeaderboard() {
+      leaderboardContainer.style.display = 'block';
+      submitScoreBtn.textContent = 'View Leaderboard';
+      submitScoreBtn.onclick = showLeaderboard;
+    }
+
+    function startGame() {
+      score = 0; level = 1;
+      scoreEl.textContent = '0'; levelEl.textContent = '1';
+      gameOverDiv.style.display = 'none';
+      startBtn.style.display = 'inline-block';
+      player.x = canvas.width/2 - playerWidth/2;
+      bullets = [];
+      initAliens();
+      alienDirection = 1;
+      alienSpeed = 1;
+      frameCount = 0;
+      gameRunning = true;
+      isPaused = false;
+      gameLoop();
+    }
+
+    const keys = {};
+    document.addEventListener('keydown', e => {
+      keys[e.key] = true;
+      if(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key===' ') e.preventDefault();
+    });
+    document.addEventListener('keyup', e => {
+      keys[e.key] = false;
+      if (e.key === 'KeyP') togglePause();
+    });
+
+    function togglePause() {
+      if (!gameRunning) return;
+      isPaused = !isPaused;
+    }
+
+    function handleInput() {
+      if (!gameRunning || isPaused) return;
+      player.dx = 0;
+      if (keys['ArrowLeft']) player.dx = -player.speed;
+      if (keys['ArrowRight']) player.dx = player.speed;
+    }
+
+    setInterval(handleInput, 16);
+
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space' && gameRunning && !isPaused) {
+        e.preventDefault();
+        if (bullets.length < 3) bullets.push({ x: player.x + playerWidth/2 - bulletWidth/2, y: player.y, hit: false });
+      }
+    });
+
+    startBtn.addEventListener('click', startGame);
+    restartBtn.addEventListener('click', startGame);
+    backBtn.addEventListener('click', () => window.location.href = 'gamehub.html');
+    submitScoreBtn.addEventListener('click', submitScore);
+    playerNameInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && playerNameInput.value.trim()) submitScore();
+    });
+    playerNameInput.addEventListener('input', () => {
+      submitScoreBtn.disabled = !playerNameInput.value.trim();
+      submitScoreBtn.style.opacity = playerNameInput.value.trim() ? '1' : '0.5';
+    });
+
+    function submitScore() {
+      const name = playerNameInput.value.trim();
+      if (!name) return;
+      const leaderboard = Leaderboard.addScore(GAME_NAME, name, score);
+      nameInputContainer.style.display = 'none';
+      leaderboardContainer.style.display = 'block';
+      leaderboardContainer.innerHTML = '<h3 style="color: #aa44ff; margin-bottom: 10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
+      submitScoreBtn.textContent = 'View Leaderboard';
+      submitScoreBtn.onclick = showLeaderboard;
+    }
+
+    function showLeaderboard() {
+      leaderboardContainer.style.display = 'block';
+      submitScoreBtn.textContent = 'View Leaderboard';
+      submitScoreBtn.onclick = showLeaderboard;
+    }
+
+    draw();
+  </script>
+</body>
+</html>
