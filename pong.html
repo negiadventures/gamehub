@@ -250,7 +250,7 @@
 
     startBtn.addEventListener('click', startGame);
     restartBtn.addEventListener('click', startGame);
-    backBtn.addEventListener('click', () => window.location.href = 'gamehub.html');
+    backBtn.addEventListener('click', () => window.location.href = 'index.html');
     submitScoreBtn.addEventListener('click', submitScore);
     playerNameInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter' && playerNameInput.value.trim()) submitScore();

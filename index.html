@@ -101,6 +101,14 @@
       background: linear-gradient(135deg, #1a1a2e 0%, #3d1a2e 100%);
     }
 
+    .game-preview.sudoku {
+      background: linear-gradient(135deg, #1a1a2e 0%, #0d5a5a 100%);
+    }
+
+    .game-preview.twenty48 {
+      background: linear-gradient(135deg, #1a1a2e 0%, #5a4d0d 100%);
+    }
+
     .game-icon {
       font-size: 4rem;
       margin-bottom: 15px;
@@ -144,6 +152,16 @@
     .game-preview.memory .game-icon {
       color: #ff6b6b;
       text-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+    }
+
+    .game-preview.sudoku .game-icon {
+      color: #00ff88;
+      text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+    }
+
+    .game-preview.twenty48 .game-icon {
+      color: #ff8844;
+      text-shadow: 0 0 20px rgba(255, 136, 68, 0.5);
     }
 
     .game-preview::after {
@@ -257,6 +275,22 @@
       box-shadow: 0 10px 25px rgba(255, 107, 107, 0.4);
     }
 
+    .game-card.sudoku .play-btn {
+      background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+    }
+
+    .game-card.sudoku .play-btn:hover {
+      box-shadow: 0 10px 25px rgba(0, 255, 136, 0.4);
+    }
+
+    .game-card.twenty48 .play-btn {
+      background: linear-gradient(135deg, #ff8844 0%, #cc6a33 100%);
+    }
+
+    .game-card.twenty48 .play-btn:hover {
+      box-shadow: 0 10px 25px rgba(255, 136, 68, 0.4);
+    }
+
     .features {
       display: flex;
       justify-content: center;
@@ -307,6 +341,17 @@
     </header>
 
     <div class="games-grid">
+      <div class="game-card twenty48">
+        <div class="game-preview twenty48">
+          <div class="game-icon">2048</div>
+        </div>
+        <div class="game-info">
+          <h2>2048</h2>
+          <p>Join the tiles to get the 2048 tile! Use arrow keys or swipe to move tiles and combine matching numbers.</p>
+          <a href="game2048.html" class="play-btn">Play Now</a>
+        </div>
+      </div>
+
       <div class="game-card snake">
         <div class="game-preview snake">
           <div class="game-icon">蛇</div>
@@ -394,10 +439,21 @@
           <a href="memory.html" class="play-btn">Play Now</a>
         </div>
       </div>
+
+      <div class="game-card sudoku">
+        <div class="game-preview sudoku">
+          <div class="game-icon">🔢</div>
+        </div>
+        <div class="game-info">
+          <h2>Sudoku</h2>
+          <p>Classic number puzzle! Fill the grid so each row, column, and 3x3 box contains digits 1-9.</p>
+          <a href="gamesudoku.html" class="play-btn">Play Now</a>
+        </div>
+      </div>
     </div>
 
     <div class="features">
-      <div class="feature"><span>🎮</span> 7 Games</div>
+      <div class="feature"><span>🎮</span> 10 Games</div>
       <div class="feature"><span>🏆</span> High Score Tracking</div>
       <div class="feature"><span>✨</span> Smooth Animations</div>
       <div class="feature"><span>📱</span> Desktop & Mobile</div>
