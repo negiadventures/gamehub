@@ -164,6 +164,24 @@
       text-shadow: 0 0 20px rgba(255, 136, 68, 0.5);
     }
 
+    .game-preview.pacman {
+      background: linear-gradient(135deg, #1a1a2e 0%, #3d3d0d 100%);
+    }
+
+    .game-preview.pacman .game-icon {
+      color: #ffff00;
+      text-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
+    }
+
+    .game-preview.tetris {
+      background: linear-gradient(135deg, #1a1a2e 0%, #2e0d3d 100%);
+    }
+
+    .game-preview.tetris .game-icon {
+      color: #ff00ff;
+      text-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+    }
+
     .game-preview::after {
       content: '';
       position: absolute;
@@ -289,6 +307,22 @@
 
     .game-card.twenty48 .play-btn:hover {
       box-shadow: 0 10px 25px rgba(255, 136, 68, 0.4);
+    }
+
+    .game-card.pacman .play-btn {
+      background: linear-gradient(135deg, #ffff00 0%, #cccc00 100%);
+    }
+
+    .game-card.pacman .play-btn:hover {
+      box-shadow: 0 10px 25px rgba(255, 255, 0, 0.4);
+    }
+
+    .game-card.tetris .play-btn {
+      background: linear-gradient(135deg, #ff00ff 0%, #aa00ff 100%);
+    }
+
+    .game-card.tetris .play-btn:hover {
+      box-shadow: 0 10px 25px rgba(255, 0, 255, 0.4);
     }
 
     .features {
@@ -440,7 +474,7 @@
         </div>
       </div>
 
-      <div class="game-card sudoku">
+    <div class="game-card sudoku">
         <div class="game-preview sudoku">
           <div class="game-icon">🔢</div>
         </div>
@@ -450,10 +484,32 @@
           <a href="gamesudoku.html" class="play-btn">Play Now</a>
         </div>
       </div>
+
+      <div class="game-card pacman">
+        <div class="game-preview pacman">
+          <div class="game-icon">😋</div>
+        </div>
+        <div class="game-info">
+          <h2>Pac-Man</h2>
+          <p>Eat all the dots while avoiding the ghosts! Use arrow keys to navigate. Good luck!</p>
+          <a href="pacman.html" class="play-btn">Play Now</a>
+        </div>
+      </div>
+
+      <div class="game-card tetris">
+        <div class="game-preview tetris">
+          <div class="game-icon">🧱</div>
+        </div>
+        <div class="game-info">
+          <h2>Tetris</h2>
+          <p>Stack the blocks and clear lines! Use arrow keys to move and rotate. How high can you go?</p>
+          <a href="tetris.html" class="play-btn">Play Now</a>
+        </div>
+      </div>
     </div>
 
     <div class="features">
-      <div class="feature"><span>🎮</span> 10 Games</div>
+      <div class="feature"><span>🎮</span> 12 Games</div>
       <div class="feature"><span>🏆</span> High Score Tracking</div>
       <div class="feature"><span>✨</span> Smooth Animations</div>
       <div class="feature"><span>📱</span> Desktop & Mobile</div>
