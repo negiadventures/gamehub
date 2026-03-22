@@ -4,7 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Minesweeper - Game Hub</title>
+  <link rel="stylesheet" href="styles.css" />
   <style>
+    :root {
+      --game-accent: #ff6600;
+      --game-accent-rgb: 255, 102, 0;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -133,13 +139,13 @@
     }
 
     .controls button {
-      padding: 12px 30px;
+      padding: 12px 32px;
       font-size: 1rem;
       border: none;
-      border-radius: 25px;
+      border-radius: 50px;
       cursor: pointer;
-      font-weight: 600;
-      transition: transform 0.2s, box-shadow 0.2s;
+      font-weight: 700;
+      transition: all 0.25s ease;
     }
 
     #newGameBtn {
@@ -153,12 +159,19 @@
     }
 
     #backBtn {
-      background: #666;
-      color: white;
+      padding: 9px 22px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      background: #444;
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.25s ease;
     }
 
     #backBtn:hover {
-      box-shadow: 0 5px 20px rgba(102, 102, 102, 0.4);
+      background: #555;
     }
 
     .game-over {
@@ -168,7 +181,7 @@
       transform: translate(-50%, -50%);
       background: rgba(0, 0, 0, 0.95);
       padding: 40px 60px;
-      border-radius: 20px;
+      border-radius: 15px;
       border: 2px solid #ff4444;
       text-align: center;
       display: none;
@@ -205,14 +218,15 @@
     }
 
     .game-over .win-btn {
-      padding: 12px 40px;
-      font-size: 1.1rem;
+      padding: 12px 32px;
+      font-size: 1rem;
+      font-weight: 700;
       background: #00ff00;
       color: #1a1a2e;
       border: none;
-      border-radius: 25px;
+      border-radius: 50px;
       cursor: pointer;
-      font-weight: 600;
+      transition: all 0.25s ease;
       margin-top: 15px;
     }
 
@@ -254,14 +268,15 @@
     }
 
     #submitScoreBtn {
-      padding: 10px 30px;
+      padding: 12px 32px;
       font-size: 1rem;
+      font-weight: 700;
       background: #ff6600;
       color: white;
       border: none;
-      border-radius: 20px;
+      border-radius: 50px;
       cursor: pointer;
-      font-weight: 600;
+      transition: all 0.25s ease;
     }
 
     #submitScoreBtn:disabled {
@@ -349,8 +364,8 @@
       <input type="text" id="playerName" placeholder="Enter your name" maxlength="15" style="padding: 10px; font-size: 1rem; border-radius: 10px; border: none; width: 200px; text-align: center;">
     </div>
     <div id="leaderboardContainer"></div>
-    <button id="submitScoreBtn" style="margin-bottom: 10px; padding: 10px 30px; font-size: 1rem; background: #ff6600; color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: 600;">Submit Score</button>
-    <button id="playAgainBtn" class="win-btn" style="display: none; padding: 12px 40px; font-size: 1.1rem; background: #00ff00; color: #1a1a2e; border: none; border-radius: 25px; cursor: pointer; font-weight: 600;">Play Again</button>
+    <button id="submitScoreBtn">Submit Score</button>
+    <button id="playAgainBtn" class="win-btn" style="display: none;">Play Again</button>
   </div>
 
   <script src="leaderboard.js"></script>

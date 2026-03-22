@@ -4,7 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pac-Man - Game Hub</title>
+  <link rel="stylesheet" href="styles.css" />
   <style>
+    :root {
+      --game-accent: #ffff00;
+      --game-accent-rgb: 255, 255, 0;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -67,15 +73,15 @@
 
     #startBtn {
       margin-top: 20px;
-      padding: 15px 40px;
-      font-size: 1.2rem;
+      padding: 12px 32px;
+      font-size: 1rem;
+      font-weight: 700;
       background: #ffff00;
       color: #1a1a2e;
       border: none;
-      border-radius: 30px;
+      border-radius: 50px;
       cursor: pointer;
-      font-weight: bold;
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: all 0.25s ease;
     }
 
     #startBtn:hover {
@@ -115,6 +121,35 @@
     .game-over.win h2 {
       color: #00ff00;
     }
+    #backBtn {
+      margin-left: 10px;
+      padding: 9px 22px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      background: #444;
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    #backBtn:hover {
+      background: #555;
+    }
+
+    #restartBtn, #submitScoreBtn {
+      padding: 12px 32px;
+      font-size: 1rem;
+      font-weight: 700;
+      background: #00ff00;
+      color: #1a1a2e;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
   </style>
 </head>
 <body>
@@ -133,7 +168,7 @@
   </div>
 
   <button id="startBtn">Start Game</button>
-  <button id="backBtn" style="margin-left: 10px; padding: 10px 30px; font-size: 1rem; background: #666; color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: bold;">Back to Hub</button>
+  <button id="backBtn">Back to Hub</button>
 
   <div class="game-over" id="gameOver">
     <h2 id="gameOverText">Game Over!</h2>
@@ -142,8 +177,8 @@
       <input type="text" id="playerName" placeholder="Enter your name" maxlength="15" style="padding: 10px; font-size: 1rem; border-radius: 10px; border: none; width: 200px; text-align: center;">
     </div>
     <div id="leaderboardContainer" style="display: none; margin-bottom: 20px;"></div>
-    <button id="submitScoreBtn" style="margin-bottom: 10px; padding: 10px 30px; font-size: 1rem; background: #00ff00; color: #1a1a2e; border: none; border-radius: 20px; cursor: pointer; font-weight: bold;">Submit Score</button>
-    <button id="restartBtn" style="padding: 10px 30px; font-size: 1rem; background: #00ff00; color: #1a1a2e; border: none; border-radius: 20px; cursor: pointer; font-weight: bold;">Play Again</button>
+    <button id="submitScoreBtn">Submit Score</button>
+    <button id="restartBtn">Play Again</button>
   </div>
 
   <script src="leaderboard.js"></script>
