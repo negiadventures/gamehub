@@ -182,6 +182,24 @@
       text-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
     }
 
+    .game-preview.minesweeper {
+      background: linear-gradient(135deg, #1a1a2e 0%, #3d1a0d 100%);
+    }
+
+    .game-preview.minesweeper .game-icon {
+      color: #ff6600;
+      text-shadow: 0 0 20px rgba(255, 102, 0, 0.5);
+    }
+
+    .game-preview.connect4 {
+      background: linear-gradient(135deg, #1a1a2e 0%, #3d0d1a 100%);
+    }
+
+    .game-preview.connect4 .game-icon {
+      color: #ff0066;
+      text-shadow: 0 0 20px rgba(255, 0, 102, 0.5);
+    }
+
     .game-preview::after {
       content: '';
       position: absolute;
@@ -506,10 +524,32 @@
           <a href="tetris.html" class="play-btn">Play Now</a>
         </div>
       </div>
+
+      <div class="game-card minesweeper">
+        <div class="game-preview minesweeper">
+          <div class="game-icon">💣</div>
+        </div>
+        <div class="game-info">
+          <h2>Minesweeper</h2>
+          <p>Find all the safe cells! Left-click to reveal, right-click to flag mines. Can you beat the clock?</p>
+          <a href="minesweeper.html" class="play-btn">Play Now</a>
+        </div>
+      </div>
+
+      <div class="game-card connect4">
+        <div class="game-preview connect4">
+          <div class="game-icon">🔴</div>
+        </div>
+        <div class="game-info">
+          <h2>Connect 4</h2>
+          <p>Classic two-player game! Drop pieces and connect 4 in a row - horizontally, vertically, or diagonally!</p>
+          <a href="connect4.html" class="play-btn">Play Now</a>
+        </div>
+      </div>
     </div>
 
-    <div class="features">
-      <div class="feature"><span>🎮</span> 12 Games</div>
+      <div class="features">
+      <div class="feature"><span>🎮</span> 14 Games</div>
       <div class="feature"><span>🏆</span> High Score Tracking</div>
       <div class="feature"><span>✨</span> Smooth Animations</div>
       <div class="feature"><span>📱</span> Desktop & Mobile</div>
