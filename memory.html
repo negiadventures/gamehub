@@ -3,286 +3,408 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Memory Game - Game Hub</title>
+  <title>Memory Game – Game Hub</title>
+  <link rel="stylesheet" href="styles.css" />
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    :root {
+      --game-accent:     #ff6b6b;
+      --game-accent-rgb: 255, 107, 107;
     }
-    h1 { color: #ff6b6b; margin-bottom: 10px; font-size: 2rem; text-shadow: 0 0 10px rgba(255, 107, 107, 0.5); }
-    .game-info { display: flex; gap: 30px; margin-bottom: 20px; font-size: 1.1rem; color: #fff; }
-    .game-info span { color: #ff6b6b; font-weight: bold; }
-    .board { display: grid; grid-template-columns: repeat(4, 80px); gap: 10px; }
+    .game-info-bar span { color: var(--game-accent); font-weight: 700; }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(4, 80px);
+      gap: 10px;
+    }
     .card {
-      width: 80px;
-      height: 80px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 2px solid rgba(255, 255, 255, 0.2);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2.5rem;
+      width: 80px; height: 80px;
+      background: rgba(255,255,255,.08);
+      border: 2px solid rgba(255,255,255,.18);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.4rem;
       cursor: pointer;
-      transition: all 0.3s;
+      transition: transform .3s;
       position: relative;
       transform-style: preserve-3d;
     }
-    .card.flipped { background: rgba(255, 255, 255, 0.2); transform: rotateY(180deg); }
-    .card.matched { background: rgba(0, 255, 136, 0.3); border-color: #00ff88; animation: pulse 0.5s; }
-    @keyframes pulse { 0%, 100% { transform: rotateY(180deg) scale(1); } 50% { transform: rotateY(180deg) scale(1.1); } }
+    .card:hover:not(.flipped):not(.matched) {
+      background: rgba(255,255,255,.18);
+      transform: scale(1.05);
+    }
+    .card.flipped { background: rgba(255,255,255,.2); transform: rotateY(180deg); }
+    .card.matched {
+      background: rgba(0,255,136,.28);
+      border-color: #00ff88;
+      animation: pulse .5s;
+    }
+    .card.opponent-flipped { opacity: .6; }
+    @keyframes pulse {
+      0%,100% { transform: rotateY(180deg) scale(1); }
+      50%      { transform: rotateY(180deg) scale(1.1); }
+    }
     .card-front, .card-back {
-      position: absolute;
-      width: 100%;
-      height: 100%;
+      position: absolute; width: 100%; height: 100%;
       backface-visibility: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       border-radius: 10px;
     }
     .card-front { transform: rotateY(180deg); }
-    .card-back { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-    .buttons { margin-top: 30px; display: flex; gap: 20px; }
-    button {
-      padding: 12px 30px;
-      font-size: 1rem;
-      background: #ff6b6b;
-      color: white;
-      border: none;
-      border-radius: 25px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: all 0.2s;
+    .card-back  { background: linear-gradient(135deg, #667eea, #764ba2); }
+
+    /* Online scoreboard */
+    .player-scores {
+      display: flex; gap: 18px; margin-bottom: 14px; flex-wrap: wrap; justify-content: center;
     }
-    button:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 107, 107, 0.5); }
-    #backBtn { background: #666; }
-    #backBtn:hover { box-shadow: 0 0 15px rgba(102, 102, 102, 0.5); }
-    .game-over {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0,0,0,0.9);
-      padding: 35px 50px;
-      border-radius: 15px;
-      border: 2px solid #00ff88;
-      text-align: center;
-      display: none;
+    .player-score-card {
+      background: var(--bg-card); border: 1px solid var(--bg-card-border);
+      border-radius: var(--radius-md); padding: 10px 18px; text-align: center;
+      min-width: 110px;
     }
-    .game-over h2 { color: #00ff88; font-size: 1.8rem; margin-bottom: 15px; }
-    .game-over p { color: #fff; font-size: 1.1rem; margin-bottom: 15px; }
-    .game-over button { background: #00ff88; color: #0a0a1a; }
+    .player-score-card.active { border-color: var(--game-accent); background: rgba(var(--game-accent-rgb),.1); }
+    .player-score-card .p-avatar { font-size: 1.4rem; }
+    .player-score-card .p-name  { font-size: .82rem; color: var(--text-muted); margin: 2px 0; }
+    .player-score-card .p-pts   { font-size: 1.5rem; font-weight: 700; color: var(--game-accent); }
+    .player-score-card .p-turn  { font-size: .72rem; color: #00ff88; font-weight: 700; }
+
+    /* game-over */
+    #nameInputContainer { margin-bottom: 16px; }
+    #nameInputContainer input {
+      padding: 10px 16px; font-size: 1rem; border-radius: var(--radius-lg);
+      border: 2px solid #444; background: #1a1a2e; color: var(--text-primary);
+      text-align: center; width: 220px; outline: none; transition: border-color .2s;
+    }
+    #nameInputContainer input:focus { border-color: var(--game-accent); }
+    #leaderboardContainer { display: none; margin-bottom: 16px; max-height: 200px; overflow-y: auto; }
   </style>
 </head>
 <body>
-  <h1>Memory Game</h1>
-  <div class="game-info">
+  <h1 class="game-title">Memory Game</h1>
+
+  <!-- Online player scoreboard (hidden in solo mode) -->
+  <div class="player-scores hidden" id="playerScores"></div>
+
+  <!-- Solo info bar -->
+  <div class="game-info-bar" id="soloInfo">
     <div>Moves: <span id="moves">0</span></div>
     <div>Time: <span id="time">0:00</span></div>
   </div>
+
   <div class="board" id="board"></div>
-  <div class="buttons">
-    <button id="restartBtn">New Game</button>
-    <button id="backBtn">Back to Hub</button>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" id="restartBtn">New Game</button>
+    <button class="btn btn-back"    id="backBtn">Back to Hub</button>
   </div>
-  <div class="game-over" id="gameOver">
-    <h2>Congratulations!</h2>
-    <div id="nameInputContainer" style="margin-bottom: 20px;">
-      <input type="text" id="playerName" placeholder="Enter your name" maxlength="15" style="padding: 10px; font-size: 1rem; border-radius: 10px; border: none; width: 200px; text-align: center;">
+
+  <!-- Game-over modal -->
+  <div class="gh-modal-backdrop hidden" id="gameOver">
+    <div class="gh-modal">
+      <h2 id="winnerTextEl">Congratulations!</h2>
+      <p class="score-label" id="resultTextEl"></p>
+      <div id="nameInputContainer">
+        <input type="text" id="playerName" placeholder="Enter your name" maxlength="15" />
+      </div>
+      <div id="leaderboardContainer"></div>
+      <div class="btn-row" style="justify-content:center;">
+        <button class="btn btn-primary"   id="submitScoreBtn" disabled>Submit Score</button>
+        <button class="btn btn-secondary" id="playAgainBtn">Play Again</button>
+      </div>
     </div>
-    <div id="leaderboardContainer" style="display: none; margin-bottom: 20px;"></div>
-    <button id="submitScoreBtn" style="margin-bottom: 10px;">Submit Score</button>
-    <button id="playAgainBtn">Play Again</button>
   </div>
+
   <script src="leaderboard.js"></script>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="multiplayer.js"></script>
   <script>
-    const playerNameInput = document.getElementById('playerName');
-    const submitScoreBtn = document.getElementById('submitScoreBtn');
-    const nameInputContainer = document.getElementById('nameInputContainer');
-    const leaderboardContainer = document.getElementById('leaderboardContainer');
-    const GAME_NAME = 'memory';
-    const boardEl = document.getElementById('board');
-    const movesEl = document.getElementById('moves');
-    const timeEl = document.getElementById('time');
-    const gameOverDiv = document.getElementById('gameOver');
-    const finalMovesEl = document.getElementById('finalMoves');
-    const finalTimeEl = document.getElementById('finalTime');
-    const restartBtn = document.getElementById('restartBtn');
-    const playAgainBtn = document.getElementById('playAgainBtn');
-    const backBtn = document.getElementById('backBtn');
+  /* ════════════════════════════════════════════════════════
+     Memory Game — solo + competitive online (each player
+     flips on their own board, compete for matched pairs)
+     ════════════════════════════════════════════════════════ */
+  const GAME_NAME = 'memory';
+  const EMOJIS = ['🍎','🍌','🍇','🍓','🍒','🍑','🍍','🥝'];
 
-    const emojis = ['🍎', '🍌', '🍇', '🍓', '🍒', '🍑', '🍍', '🥝'];
-    let cards = [];
-    let flippedCards = [];
-    let matchedPairs = 0;
-    let moves = 0;
-    let gameActive = false;
-    let timerInterval;
-    let seconds = 0;
+  const boardEl        = document.getElementById('board');
+  const movesEl        = document.getElementById('moves');
+  const timeEl         = document.getElementById('time');
+  const gameOverDiv    = document.getElementById('gameOver');
+  const winnerTextEl   = document.getElementById('winnerTextEl');
+  const resultTextEl   = document.getElementById('resultTextEl');
+  const restartBtn     = document.getElementById('restartBtn');
+  const playAgainBtn   = document.getElementById('playAgainBtn');
+  const backBtn        = document.getElementById('backBtn');
+  const playerNameIn   = document.getElementById('playerName');
+  const submitScoreBtn = document.getElementById('submitScoreBtn');
+  const nameInputCont  = document.getElementById('nameInputContainer');
+  const leaderboardCont= document.getElementById('leaderboardContainer');
+  const playerScoresEl = document.getElementById('playerScores');
+  const soloInfoEl     = document.getElementById('soloInfo');
 
-    function shuffle(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-      }
-      return array;
+  let cards = [], flippedCards = [], matchedPairs = 0, moves = 0;
+  let gameActive = false, timerInterval, seconds = 0;
+
+  /* ── Online state ── */
+  let onlineMode  = false;
+  let ghRoom      = null;
+  let remotePlayers = [];
+  let myPairs     = 0;
+  let opponentPairs = 0;
+  let totalPairs  = EMOJIS.length;  // 8 pairs
+  let myTurn      = false;
+  let isHost      = false;
+
+  /* Online: shared card order is set by host and sent to guest */
+  let sharedOrder = [];
+
+  function checkOnlineMode() {
+    const s = sessionStorage.getItem('gh_room');
+    if (!s) return false;
+    try { const d = JSON.parse(s); return d.gameType === GAME_NAME ? d : false; }
+    catch(e) { return false; }
+  }
+
+  const sessionData = checkOnlineMode();
+  if (sessionData) {
+    onlineMode = true;
+    isHost     = sessionData.role === 'host';
+    myTurn     = isHost;
+    remotePlayers = sessionData.players || [];
+    playerScoresEl.classList.remove('hidden');
+    soloInfoEl.classList.add('hidden');
+
+    ghRoom = new GameRoom();
+    if (isHost) {
+      ghRoom.create(GAME_NAME, sessionData.settings||{}, onRoomEvent);
+    } else {
+      ghRoom.join(sessionData.code, sessionData.player, onRoomEvent);
     }
+  }
 
-    function formatTime(secs) {
-      const m = Math.floor(secs / 60);
-      const s = secs % 60;
-      return `${m}:${s.toString().padStart(2, '0')}`;
-    }
-
-    function startTimer() {
-      seconds = 0;
-      timeEl.textContent = '0:00';
-      timerInterval = setInterval(() => {
-        seconds++;
-        timeEl.textContent = formatTime(seconds);
-      }, 1000);
-    }
-
-    function stopTimer() {
-      clearInterval(timerInterval);
-    }
-
-    function createBoard() {
-      const gameCards = shuffle([...emojis, ...emojis]);
-      boardEl.innerHTML = '';
-      cards = gameCards.map((emoji, index) => ({ emoji, index, matched: false }));
-
-      cards.forEach((card, i) => {
-        const cardEl = document.createElement('div');
-        cardEl.className = 'card';
-        cardEl.dataset.index = i;
-        cardEl.innerHTML = `
-          <div class="card-front">${card.emoji}</div>
-          <div class="card-back">?</div>
-        `;
-        cardEl.addEventListener('click', () => flipCard(i, cardEl));
-        boardEl.appendChild(cardEl);
-      });
-    }
-
-    function flipCard(index, cardEl) {
-      if (!gameActive || flippedCards.length >= 2 || cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
-
-      cardEl.classList.add('flipped');
-      flippedCards.push({ index, element: cardEl, emoji: cards[index].emoji });
-
-      if (flippedCards.length === 2) {
-        moves++;
-        movesEl.textContent = moves;
-        checkMatch();
+  function onRoomEvent(event, data) {
+    if (event === 'connected') {
+      remotePlayers = ghRoom.players;
+      renderPlayerScores();
+      if (isHost) {
+        // Generate and share card order when connected
+        sharedOrder = generateOrder();
+        ghRoom.sendState({ order: sharedOrder });
+        newGame(sharedOrder);
       }
     }
-
-    function checkMatch() {
-      const [card1, card2] = flippedCards;
-
-      if (card1.emoji === card2.emoji) {
-        card1.element.classList.add('matched');
-        card2.element.classList.add('matched');
-        cards[card1.index].matched = true;
-        cards[card2.index].matched = true;
-        matchedPairs++;
-        flippedCards = [];
-
-        if (matchedPairs === emojis.length) {
-          endGame();
+    if (event === 'room-update') { remotePlayers = data.players||remotePlayers; renderPlayerScores(); }
+    if (event === 'game-state') {
+      if (!isHost && data.state.order) {
+        sharedOrder = data.state.order;
+        newGame(sharedOrder);
+      }
+      if (data.state.pairs !== undefined) {
+        opponentPairs = data.state.pairs;
+        renderPlayerScores();
+        checkOnlineWin();
+      }
+    }
+    if (event === 'game-move') {
+      const d = data.data;
+      if (d.type === 'flip') {
+        // Show opponent's flip briefly (visual only)
+        const cardEl = boardEl.children[d.index];
+        if (cardEl && !cardEl.classList.contains('matched')) {
+          cardEl.classList.add('opponent-flipped');
+          setTimeout(() => cardEl.classList.remove('opponent-flipped'), 900);
         }
-      } else {
-        setTimeout(() => {
-          card1.element.classList.remove('flipped');
-          card2.element.classList.remove('flipped');
-          flippedCards = [];
-        }, 1000);
+      }
+      if (d.type === 'match') {
+        // Opponent matched a pair – mark them on our board too
+        [d.i1, d.i2].forEach(idx => {
+          const el = boardEl.children[idx];
+          if (el) el.classList.add('matched');
+        });
+        opponentPairs = d.total;
+        renderPlayerScores();
+        checkOnlineWin();
+      }
+      if (d.type === 'turn-switch') {
+        myTurn = true;
+        renderPlayerScores();
       }
     }
+    if (event === 'player-left') { winnerTextEl.textContent = 'Opponent left.'; showGameOver(false); }
+  }
 
-    function endGame() {
-      gameActive = false;
-      stopTimer();
-      finalMovesEl.textContent = moves;
-      finalTimeEl.textContent = formatTime(seconds);
-      gameOverDiv.style.display = 'block';
-      playerNameInput.value = '';
-      nameInputContainer.style.display = 'block';
-      submitScoreBtn.disabled = true;
-      submitScoreBtn.style.opacity = '0.5';
-      // Show leaderboard if there are existing scores
-      const existingLeaderboard = Leaderboard.get(GAME_NAME);
-      if (existingLeaderboard && existingLeaderboard.length > 0) {
-        leaderboardContainer.style.display = 'block';
-        leaderboardContainer.innerHTML = '<h3 style="color: #ff6b6b; margin-bottom: 10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
-        submitScoreBtn.textContent = 'View Leaderboard';
-        submitScoreBtn.onclick = showLeaderboard;
-      } else {
-        leaderboardContainer.style.display = 'none';
-        submitScoreBtn.textContent = 'Submit Score';
-        submitScoreBtn.onclick = submitScore;
-      }
+  function renderPlayerScores() {
+    playerScoresEl.innerHTML = '';
+    const mySlot       = isHost ? 0 : 1;
+    const opponentSlot = isHost ? 1 : 0;
+    const me  = remotePlayers[mySlot];
+    const opp = remotePlayers[opponentSlot];
+
+    const myCard  = scoreCard(me,  isHost?myPairs:opponentPairs, isHost?myTurn:!myTurn, '(You)');
+    const oppCard = scoreCard(opp, isHost?opponentPairs:myPairs, isHost?!myTurn:myTurn, '');
+    playerScoresEl.appendChild(isHost ? myCard : oppCard);
+    playerScoresEl.appendChild(isHost ? oppCard : myCard);
+  }
+
+  function scoreCard(player, pairs, active, badge) {
+    const div = document.createElement('div');
+    div.className = 'player-score-card' + (active?' active':'');
+    div.innerHTML = `
+      <div class="p-avatar">${player?player.avatar||'🎮':'👤'}</div>
+      <div class="p-name">${player?esc(player.name):'Waiting…'} ${badge?'<em style="color:var(--game-accent);font-size:.7rem;">'+badge+'</em>':''}</div>
+      <div class="p-pts">${pairs}</div>
+      ${active?'<div class="p-turn">Your turn</div>':''}
+    `;
+    return div;
+  }
+
+  function checkOnlineWin() {
+    const matched = myPairs + opponentPairs;
+    if (matched >= totalPairs) {
+      let msg;
+      if (myPairs > opponentPairs) msg = 'You Win! 🎉';
+      else if (opponentPairs > myPairs) msg = 'Opponent Wins!';
+      else msg = "It's a Tie!";
+      winnerTextEl.textContent = msg;
+      resultTextEl.textContent = `You matched ${myPairs} pairs, opponent matched ${opponentPairs} pairs.`;
+      showGameOver(false);
     }
+  }
 
-    function showLeaderboard() {
-      leaderboardContainer.style.display = 'block';
-      submitScoreBtn.textContent = 'View Leaderboard';
-      submitScoreBtn.onclick = showLeaderboard;
+  /* ── Board ── */
+  function generateOrder() {
+    return shuffle([...EMOJIS, ...EMOJIS]);
+  }
+
+  function shuffle(a) {
+    for (let i=a.length-1;i>0;i--) {
+      const j=Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
     }
+    return a;
+  }
 
-    function newGame() {
-      gameActive = true;
-      matchedPairs = 0;
-      moves = 0;
-      flippedCards = [];
+  function newGame(order) {
+    const emojis = order || generateOrder();
+    boardEl.innerHTML = '';
+    cards = emojis.map((emoji,index)=>({emoji,index,matched:false}));
+    matchedPairs=0; moves=0; myPairs=0; opponentPairs=0; flippedCards=[];
+    if (!onlineMode) {
       movesEl.textContent = '0';
-      gameOverDiv.style.display = 'none';
-      nameInputContainer.style.display = 'block';
-      leaderboardContainer.style.display = 'none';
-      submitScoreBtn.textContent = 'Submit Score';
-      submitScoreBtn.onclick = submitScore;
-      createBoard();
+      gameActive = true;
       startTimer();
+    } else {
+      gameActive = true;
     }
+    gameOverDiv.classList.add('hidden');
+    nameInputCont.style.display = !onlineMode ? 'block' : 'none';
+    leaderboardCont.style.display = 'none';
 
-    restartBtn.addEventListener('click', newGame);
-    playAgainBtn.addEventListener('click', newGame);
-    backBtn.addEventListener('click', () => window.location.href = 'index.html');
-    submitScoreBtn.addEventListener('click', submitScore);
-    playerNameInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter' && playerNameInput.value.trim()) submitScore();
+    cards.forEach((card,i) => {
+      const el = document.createElement('div');
+      el.className = 'card';
+      el.dataset.index = i;
+      el.innerHTML = `<div class="card-front">${card.emoji}</div><div class="card-back">?</div>`;
+      el.addEventListener('click', () => flipCard(i, el));
+      boardEl.appendChild(el);
     });
-    playerNameInput.addEventListener('input', () => {
-      submitScoreBtn.disabled = !playerNameInput.value.trim();
-      submitScoreBtn.style.opacity = playerNameInput.value.trim() ? '1' : '0.5';
-    });
+    if (onlineMode) renderPlayerScores();
+  }
 
-    function submitScore() {
-      const name = playerNameInput.value.trim();
-      if (!name) return;
-      const leaderboard = Leaderboard.addScore(GAME_NAME, name, moves);
-      nameInputContainer.style.display = 'none';
-      leaderboardContainer.style.display = 'block';
-      leaderboardContainer.innerHTML = '<h3 style="color: #ff6b6b; margin-bottom: 10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
-      submitScoreBtn.textContent = 'View Leaderboard';
-      submitScoreBtn.onclick = showLeaderboard;
+  function flipCard(index, cardEl) {
+    if (!gameActive) return;
+    if (cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
+    if (flippedCards.length >= 2) return;
+    if (onlineMode && !myTurn) return;
+
+    cardEl.classList.add('flipped');
+    flippedCards.push({ index, element: cardEl, emoji: cards[index].emoji });
+
+    if (onlineMode && ghRoom) ghRoom.sendMove({ type:'flip', index });
+
+    if (flippedCards.length === 2) {
+      if (!onlineMode) { moves++; movesEl.textContent = moves; }
+      checkMatch();
     }
+  }
 
-    function showLeaderboard() {
-      leaderboardContainer.style.display = 'block';
-      submitScoreBtn.textContent = 'View Leaderboard';
-      submitScoreBtn.onclick = showLeaderboard;
+  function checkMatch() {
+    const [c1, c2] = flippedCards;
+    if (c1.emoji === c2.emoji) {
+      c1.element.classList.add('matched');
+      c2.element.classList.add('matched');
+      cards[c1.index].matched = true;
+      cards[c2.index].matched = true;
+      matchedPairs++;
+      if (onlineMode) {
+        myPairs++;
+        if (ghRoom) ghRoom.sendMove({ type:'match', i1:c1.index, i2:c2.index, total: myPairs });
+        renderPlayerScores();
+        checkOnlineWin();
+      }
+      flippedCards = [];
+      if (!onlineMode && matchedPairs === EMOJIS.length) endGame();
+    } else {
+      setTimeout(() => {
+        c1.element.classList.remove('flipped');
+        c2.element.classList.remove('flipped');
+        flippedCards = [];
+        if (onlineMode) {
+          myTurn = false;
+          if (ghRoom) ghRoom.sendMove({ type:'turn-switch' });
+          renderPlayerScores();
+        }
+      }, 950);
     }
+  }
 
-    createBoard();
+  /* ── Solo game end ── */
+  function endGame() {
+    gameActive = false; stopTimer();
+    winnerTextEl.textContent = 'Congratulations!';
+    resultTextEl.textContent = `${moves} moves · ${formatTime(seconds)}`;
+    showGameOver(true);
+  }
+
+  function showGameOver(showScore) {
+    gameActive = false; stopTimer();
+    gameOverDiv.classList.remove('hidden');
+    nameInputCont.style.display = showScore ? 'block' : 'none';
+    submitScoreBtn.disabled = true; submitScoreBtn.style.opacity = '.5';
+    if (showScore) {
+      const ex = Leaderboard.get(GAME_NAME);
+      if (ex && ex.length > 0) {
+        leaderboardCont.style.display = 'block';
+        leaderboardCont.innerHTML = '<h3 style="color:var(--game-accent);margin-bottom:8px;">Top Players</h3>' + Leaderboard.render(GAME_NAME);
+      }
+    }
+  }
+
+  /* ── Timer ── */
+  function startTimer() { seconds=0; timeEl.textContent='0:00'; timerInterval=setInterval(()=>{seconds++;timeEl.textContent=formatTime(seconds);},1000); }
+  function stopTimer()  { clearInterval(timerInterval); }
+  function formatTime(s){ return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; }
+
+  function submitScore() {
+    const name = playerNameIn.value.trim(); if(!name) return;
+    Leaderboard.addScore(GAME_NAME, name, moves);
+    nameInputCont.style.display = 'none';
+    leaderboardCont.style.display = 'block';
+    leaderboardCont.innerHTML = '<h3 style="color:var(--game-accent);margin-bottom:8px;">Top Players</h3>' + Leaderboard.render(GAME_NAME);
+  }
+
+  restartBtn.addEventListener('click', () => newGame());
+  playAgainBtn.addEventListener('click', () => newGame());
+  backBtn.addEventListener('click', () => { if(ghRoom) ghRoom.destroy(); window.location.href='index.html'; });
+  submitScoreBtn.addEventListener('click', submitScore);
+  playerNameIn.addEventListener('input', () => {
+    const ok = !!playerNameIn.value.trim();
+    submitScoreBtn.disabled = !ok; submitScoreBtn.style.opacity = ok?'1':'.5';
+  });
+  playerNameIn.addEventListener('keypress', e => { if(e.key==='Enter'&&playerNameIn.value.trim()) submitScore(); });
+
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  if (!onlineMode) newGame();
   </script>
 </body>
 </html>
