@@ -301,8 +301,10 @@
   function handleInput() {
     if (!gameRunning) return;
     p1.dy = 0; p2.dy = 0;
-    if (keys['w']||keys['W']) p1.dy = -6;
-    if (keys['s']||keys['S']) p1.dy = 6;
+    if (!onlineMode || myPaddle === 1) {
+      if (keys['w']||keys['W']) p1.dy = -6;
+      if (keys['s']||keys['S']) p1.dy = 6;
+    }
     if (!onlineMode) {
       if (keys['ArrowUp'])   p2.dy = -6;
       if (keys['ArrowDown']) p2.dy = 6;
