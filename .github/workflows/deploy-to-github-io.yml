@@ -29,16 +29,23 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
+          # Use credential helper to avoid token appearing in log output
+          git config --global credential.helper store
+          echo "https://x-access-token:${DEPLOY_TOKEN}@github.com" > ~/.git-credentials
+
           # Clone the target public repository
           git clone --depth=1 \
-            "https://x-access-token:${DEPLOY_TOKEN}@github.com/${TARGET_REPO}.git" \
+            "https://github.com/${TARGET_REPO}.git" \
             target-repo
 
-          # Copy all static assets (excluding .git and .github metadata)
+          # Copy all static assets (excluding .git, .github metadata and
+          # files that live only in the target repo such as CNAME or 404.html)
           rsync -av --delete \
             --exclude=".git/" \
             --exclude=".github/" \
             --exclude=".DS_Store" \
+            --exclude="CNAME" \
+            --exclude="404.html" \
             --exclude="target-repo/" \
             ./ target-repo/
 
