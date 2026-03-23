@@ -71,14 +71,6 @@
     }
 
     /* Game-over modal (uses shared .gh-modal-backdrop + .gh-modal) */
-    #nameInputContainer { margin-bottom: 18px; }
-    #nameInputContainer input {
-      padding: 10px 16px; font-size: 1rem; border-radius: var(--radius-lg);
-      border: 2px solid #444; background: #1a1a2e; color: var(--text-primary);
-      text-align: center; width: 220px; outline: none; transition: border-color .2s;
-    }
-    #nameInputContainer input:focus { border-color: var(--game-accent); }
-    #leaderboardContainer { display: none; margin-bottom: 18px; max-height: 220px; overflow-y: auto; }
   </style>
 </head>
 <body>
@@ -110,10 +102,10 @@
   <div class="gh-modal-backdrop hidden" id="gameOver">
     <div class="gh-modal">
       <h2 id="winnerText">X Wins!</h2>
-      <div id="nameInputContainer">
+      <div id="nameInputContainer" class="name-input-wrap">
         <input type="text" id="playerName" placeholder="Enter your name" maxlength="15" />
       </div>
-      <div id="leaderboardContainer"></div>
+      <div id="leaderboardContainer" class="leaderboard-wrap hidden"></div>
       <div class="btn-row" style="justify-content:center;">
         <button class="btn btn-primary" id="submitScoreBtn" disabled>Submit Score</button>
         <button class="btn btn-secondary" id="playAgainBtn">Play Again</button>
@@ -353,14 +345,13 @@
       highlightWinner();
     }
     gameOverDiv.classList.remove('hidden');
-    nameInputCont.style.display = onlineMode ? 'none' : 'block';
+    onlineMode ? nameInputCont.classList.add('hidden') : nameInputCont.classList.remove('hidden');
     submitScoreBtn.disabled = true;
-    submitScoreBtn.style.opacity = '0.5';
 
     const existing = Leaderboard.get(GAME_NAME);
     if (existing && existing.length > 0) {
-      leaderboardCont.style.display = 'block';
-      leaderboardCont.innerHTML = '<h3 style="color:var(--game-accent);margin-bottom:8px;">Top Players</h3>' + Leaderboard.render(GAME_NAME);
+      leaderboardCont.classList.remove('hidden');
+      leaderboardCont.innerHTML = '<h3 class="text-accent" style="margin-bottom:8px;">Top Players</h3>' + Leaderboard.render(GAME_NAME);
     }
   }
 
@@ -370,10 +361,9 @@
     gameActive = true;
     if (onlineMode) { myTurn = (mySymbol === 'X'); }
     gameOverDiv.classList.add('hidden');
-    leaderboardCont.style.display = 'none';
+    leaderboardCont.classList.add('hidden');
     submitScoreBtn.textContent = 'Submit Score';
     submitScoreBtn.disabled = true;
-    submitScoreBtn.style.opacity = '0.5';
     updateStatus();
     createBoard();
   }
@@ -382,9 +372,9 @@
     const name = playerNameIn.value.trim();
     if (!name) return;
     Leaderboard.addScore(GAME_NAME, name, wins);
-    nameInputCont.style.display = 'none';
-    leaderboardCont.style.display = 'block';
-    leaderboardCont.innerHTML = '<h3 style="color:var(--game-accent);margin-bottom:8px;">Top Players</h3>' + Leaderboard.render(GAME_NAME);
+    nameInputCont.classList.add('hidden');
+    leaderboardCont.classList.remove('hidden');
+    leaderboardCont.innerHTML = '<h3 class="text-accent" style="margin-bottom:8px;">Top Players</h3>' + Leaderboard.render(GAME_NAME);
   }
 
   /* ── Events ───────────────────────────────────────── */
@@ -394,9 +384,7 @@
   submitScoreBtn.addEventListener('click', submitScore);
 
   playerNameIn.addEventListener('input', () => {
-    const ok = !!playerNameIn.value.trim();
-    submitScoreBtn.disabled = !ok;
-    submitScoreBtn.style.opacity = ok ? '1' : '0.5';
+    submitScoreBtn.disabled = !playerNameIn.value.trim();
   });
   playerNameIn.addEventListener('keypress', e => { if(e.key==='Enter' && playerNameIn.value.trim()) submitScore(); });
 

@@ -69,14 +69,6 @@
     .player-score-card .p-turn  { font-size: .72rem; color: #00ff88; font-weight: 700; }
 
     /* game-over */
-    #nameInputContainer { margin-bottom: 16px; }
-    #nameInputContainer input {
-      padding: 10px 16px; font-size: 1rem; border-radius: var(--radius-lg);
-      border: 2px solid #444; background: #1a1a2e; color: var(--text-primary);
-      text-align: center; width: 220px; outline: none; transition: border-color .2s;
-    }
-    #nameInputContainer input:focus { border-color: var(--game-accent); }
-    #leaderboardContainer { display: none; margin-bottom: 16px; max-height: 200px; overflow-y: auto; }
   </style>
 </head>
 <body>
@@ -103,10 +95,10 @@
     <div class="gh-modal">
       <h2 id="winnerTextEl">Congratulations!</h2>
       <p class="score-label" id="resultTextEl"></p>
-      <div id="nameInputContainer">
+      <div id="nameInputContainer" class="name-input-wrap">
         <input type="text" id="playerName" placeholder="Enter your name" maxlength="15" />
       </div>
-      <div id="leaderboardContainer"></div>
+      <div id="leaderboardContainer" class="leaderboard-wrap hidden"></div>
       <div class="btn-row" style="justify-content:center;">
         <button class="btn btn-primary"   id="submitScoreBtn" disabled>Submit Score</button>
         <button class="btn btn-secondary" id="playAgainBtn">Play Again</button>
@@ -296,8 +288,8 @@
       gameActive = true;
     }
     gameOverDiv.classList.add('hidden');
-    nameInputCont.style.display = !onlineMode ? 'block' : 'none';
-    leaderboardCont.style.display = 'none';
+    !onlineMode ? nameInputCont.classList.remove('hidden') : nameInputCont.classList.add('hidden');
+    leaderboardCont.classList.add('hidden');
 
     cards.forEach((card,i) => {
       const el = document.createElement('div');
@@ -368,13 +360,13 @@
   function showGameOver(showScore) {
     gameActive = false; stopTimer();
     gameOverDiv.classList.remove('hidden');
-    nameInputCont.style.display = showScore ? 'block' : 'none';
-    submitScoreBtn.disabled = true; submitScoreBtn.style.opacity = '.5';
+    showScore ? nameInputCont.classList.remove('hidden') : nameInputCont.classList.add('hidden');
+    submitScoreBtn.disabled = true;
     if (showScore) {
       const ex = Leaderboard.get(GAME_NAME);
       if (ex && ex.length > 0) {
-        leaderboardCont.style.display = 'block';
-        leaderboardCont.innerHTML = '<h3 style="color:var(--game-accent);margin-bottom:8px;">Top Players</h3>' + Leaderboard.render(GAME_NAME);
+        leaderboardCont.classList.remove('hidden');
+        leaderboardCont.innerHTML = '<h3 class="text-accent" style="margin-bottom:8px;">Top Players</h3>' + Leaderboard.render(GAME_NAME);
       }
     }
   }
@@ -387,9 +379,9 @@
   function submitScore() {
     const name = playerNameIn.value.trim(); if(!name) return;
     Leaderboard.addScore(GAME_NAME, name, moves);
-    nameInputCont.style.display = 'none';
-    leaderboardCont.style.display = 'block';
-    leaderboardCont.innerHTML = '<h3 style="color:var(--game-accent);margin-bottom:8px;">Top Players</h3>' + Leaderboard.render(GAME_NAME);
+    nameInputCont.classList.add('hidden');
+    leaderboardCont.classList.remove('hidden');
+    leaderboardCont.innerHTML = '<h3 class="text-accent" style="margin-bottom:8px;">Top Players</h3>' + Leaderboard.render(GAME_NAME);
   }
 
   restartBtn.addEventListener('click', () => newGame());
@@ -397,8 +389,7 @@
   backBtn.addEventListener('click', () => { if(ghRoom) ghRoom.destroy(); window.location.href='index.html'; });
   submitScoreBtn.addEventListener('click', submitScore);
   playerNameIn.addEventListener('input', () => {
-    const ok = !!playerNameIn.value.trim();
-    submitScoreBtn.disabled = !ok; submitScoreBtn.style.opacity = ok?'1':'.5';
+    submitScoreBtn.disabled = !playerNameIn.value.trim();
   });
   playerNameIn.addEventListener('keypress', e => { if(e.key==='Enter'&&playerNameIn.value.trim()) submitScore(); });
 

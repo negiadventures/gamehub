@@ -11,57 +11,18 @@
       --game-accent-rgb: 255, 0, 255;
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-    h1 {
-      color: #ff00ff;
-      margin-bottom: 10px;
-      font-size: 2.5rem;
-      text-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
-    }
-
     .game-container {
       display: flex;
       gap: 20px;
       align-items: flex-start;
     }
 
-    #gameCanvas {
-      border: 3px solid #ff00ff;
-      border-radius: 10px;
-      box-shadow: 0 0 20px rgba(255, 0, 255, 0.3);
-    }
-
-    .game-info {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
+    .side-panel {
       color: #fff;
     }
 
-    .info-box {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 15px 20px;
-      border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
     .info-box h3 {
-      color: #ff00ff;
+      color: var(--game-accent);
       font-size: 0.9rem;
       margin-bottom: 5px;
     }
@@ -72,74 +33,11 @@
       color: #fff;
     }
 
-    .controls {
-      margin-top: 20px;
-      color: #aaa;
-      text-align: center;
-      font-size: 0.9rem;
-    }
-
-    .controls p {
-      margin: 5px 0;
-    }
-
-    .controls kbd {
-      background: #333;
-      padding: 3px 8px;
-      border-radius: 4px;
-      border: 1px solid #555;
-      font-family: monospace;
-      color: #fff;
-    }
-
-    #startBtn {
-      margin-top: 20px;
-      padding: 12px 32px;
-      font-size: 1rem;
-      font-weight: 700;
-      background: #ff00ff;
-      color: #1a1a2e;
-      border: none;
-      border-radius: 50px;
-      cursor: pointer;
-      transition: all 0.25s ease;
-    }
-
-    #startBtn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
-    }
-
     .next-piece {
       width: 100px;
       height: 100px;
       background: rgba(0, 0, 0, 0.3);
       border-radius: 10px;
-    }
-
-    .game-over {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.9);
-      padding: 40px 60px;
-      border-radius: 15px;
-      border: 2px solid #ff4444;
-      text-align: center;
-      display: none;
-    }
-
-    .game-over h2 {
-      color: #ff4444;
-      font-size: 2rem;
-      margin-bottom: 15px;
-    }
-
-    .game-over p {
-      color: #fff;
-      font-size: 1.2rem;
-      margin-bottom: 20px;
     }
 
     .level-info {
@@ -161,44 +59,15 @@
       background: linear-gradient(90deg, #ff00ff, #00ffff);
       transition: width 0.3s;
     }
-    #backBtn {
-      margin-left: 10px;
-      padding: 9px 22px;
-      font-size: 0.9rem;
-      font-weight: 700;
-      background: #444;
-      color: #fff;
-      border: none;
-      border-radius: 50px;
-      cursor: pointer;
-      transition: all 0.25s ease;
-    }
-
-    #backBtn:hover {
-      background: #555;
-    }
-
-    #restartBtn, #submitScoreBtn {
-      padding: 12px 32px;
-      font-size: 1rem;
-      font-weight: 700;
-      background: #ff00ff;
-      color: #1a1a2e;
-      border: none;
-      border-radius: 50px;
-      cursor: pointer;
-      transition: all 0.25s ease;
-    }
-
   </style>
 </head>
 <body>
-  <h1>Tetris</h1>
+  <h1 class="game-title">Tetris</h1>
 
   <div class="game-container">
-    <canvas id="gameCanvas" width="300" height="600"></canvas>
+    <canvas id="gameCanvas" class="game-canvas-border" width="300" height="600"></canvas>
 
-    <div class="game-info">
+    <div class="side-panel">
       <div class="info-box">
         <h3>Score</h3>
         <span id="score">0</span>
@@ -233,7 +102,7 @@
     </div>
   </div>
 
-  <div class="controls">
+  <div class="controls-hint">
     <p><kbd>←</kbd> <kbd>→</kbd> Move left/right</p>
     <p><kbd>↓</kbd> Soft drop</p>
     <p><kbd>↑</kbd> Rotate</p>
@@ -241,20 +110,26 @@
     <p><kbd>P</kbd> Pause</p>
   </div>
 
-  <button id="startBtn">Start Game</button>
-  <button id="backBtn">Back to Hub</button>
+  <div class="btn-row" style="margin-top:16px;">
+    <button id="startBtn" class="btn btn-primary">Start Game</button>
+    <button id="backBtn" class="btn btn-back btn-sm">Back to Hub</button>
+  </div>
 
-  <div class="game-over" id="gameOver">
-    <h2>Game Over!</h2>
-    <p>Final Score: <span id="finalScore">0</span></p>
-    <p>Level: <span id="finalLevel">1</span></p>
-    <p>Lines: <span id="finalLines">0</span></p>
-    <div id="nameInputContainer" style="margin-bottom: 20px;">
-      <input type="text" id="playerName" placeholder="Enter your name" maxlength="15" style="padding: 10px; font-size: 1rem; border-radius: 10px; border: none; width: 200px; text-align: center;">
+  <div class="gh-modal-backdrop hidden" id="gameOver">
+    <div class="gh-modal">
+      <h2>Game Over!</h2>
+      <p class="score-label">Final Score: <span id="finalScore">0</span></p>
+      <p class="score-label">Level: <span id="finalLevel">1</span></p>
+      <p class="score-label">Lines: <span id="finalLines">0</span></p>
+      <div id="nameInputContainer" class="name-input-wrap">
+        <input type="text" id="playerName" placeholder="Enter your name" maxlength="15">
+      </div>
+      <div id="leaderboardContainer" class="leaderboard-wrap hidden"></div>
+      <div class="btn-row" style="justify-content:center;">
+        <button id="submitScoreBtn" class="btn btn-primary" disabled>Submit Score</button>
+        <button id="restartBtn" class="btn btn-secondary">Play Again</button>
+      </div>
     </div>
-    <div id="leaderboardContainer" style="display: none; margin-bottom: 20px;"></div>
-    <button id="submitScoreBtn">Submit Score</button>
-    <button id="restartBtn">Play Again</button>
   </div>
 
   <script src="leaderboard.js"></script>
@@ -564,7 +439,7 @@
       isGameRunning = true;
       isPaused = false;
       startBtn.textContent = 'Restart Game';
-      gameOverDiv.style.display = 'none';
+      gameOverDiv.classList.add('hidden');
 
       lastTimestamp = performance.now();
       dropAccumulator = 0;
@@ -586,22 +461,21 @@
       finalScoreElement.textContent = score;
       finalLevelElement.textContent = level;
       finalLinesElement.textContent = lines;
-      gameOverDiv.style.display = 'block';
+      gameOverDiv.classList.remove('hidden');
       startBtn.textContent = 'Start Game';
 
       playerNameInput.value = '';
-      nameInputContainer.style.display = 'block';
+      nameInputContainer.classList.remove('hidden');
       submitScoreBtn.disabled = true;
-      submitScoreBtn.style.opacity = '0.5';
 
       const existingLeaderboard = Leaderboard.get(GAME_NAME);
       if (existingLeaderboard && existingLeaderboard.length > 0) {
-        leaderboardContainer.style.display = 'block';
-        leaderboardContainer.innerHTML = '<h3 style="color: #ff00ff; margin-bottom: 10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
+        leaderboardContainer.classList.remove('hidden');
+        leaderboardContainer.innerHTML = '<h3 class="text-accent" style="margin-bottom:10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
         submitScoreBtn.textContent = 'View Leaderboard';
         submitScoreBtn.onclick = showLeaderboard;
       } else {
-        leaderboardContainer.style.display = 'none';
+        leaderboardContainer.classList.add('hidden');
         submitScoreBtn.textContent = 'Submit Score';
         submitScoreBtn.onclick = submitScore;
       }
@@ -626,7 +500,7 @@
     }
 
     function showLeaderboard() {
-      leaderboardContainer.style.display = 'block';
+      leaderboardContainer.classList.remove('hidden');
       submitScoreBtn.textContent = 'View Leaderboard';
       submitScoreBtn.onclick = showLeaderboard;
     }
@@ -639,9 +513,9 @@
       const name = playerNameInput.value.trim();
       if (!name) return;
       const leaderboard = Leaderboard.addScore(GAME_NAME, name, score);
-      nameInputContainer.style.display = 'none';
-      leaderboardContainer.style.display = 'block';
-      leaderboardContainer.innerHTML = '<h3 style="color: #ff00ff; margin-bottom: 10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
+      nameInputContainer.classList.add('hidden');
+      leaderboardContainer.classList.remove('hidden');
+      leaderboardContainer.innerHTML = '<h3 class="text-accent" style="margin-bottom:10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
       submitScoreBtn.textContent = 'View Leaderboard';
       submitScoreBtn.onclick = showLeaderboard;
     }
@@ -691,7 +565,6 @@
     });
     playerNameInput.addEventListener('input', () => {
       submitScoreBtn.disabled = !playerNameInput.value.trim();
-      submitScoreBtn.style.opacity = playerNameInput.value.trim() ? '1' : '0.5';
     });
 
     // Initial draw
