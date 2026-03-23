@@ -7,8 +7,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
     <style>
       :root {
+        --game-accent: #6366f1;
+        --game-accent-rgb: 99, 102, 241;
         --bg: #0a0e1a;
         --bg-alt: #111827;
         --bg-card: rgba(30, 41, 59, 0.8);
@@ -24,23 +27,6 @@
         --mono: "JetBrains Mono", monospace;
         --sans: "Space Grotesk", sans-serif;
         --gradient-hero: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
-      }
-
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: var(--sans);
-        background: var(--bg);
-        color: var(--text);
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 20px;
       }
 
       .game-container {
@@ -554,10 +540,11 @@
 
         showStatus(type, message) {
           this.statusEl.className = `game-status show ${type}`;
+          const btnLabel = type === 'lose' ? 'Try Again' : 'Continue';
           this.statusEl.innerHTML = `
             <h2>${message}</h2>
             <p>Score: ${this.score}</p>
-            <button class="btn-game btn-primary" onclick="game.nextGame()">Continue</button>
+            <button class="btn-game btn-primary" onclick="game.nextGame()">${btnLabel}</button>
           `;
         }
 

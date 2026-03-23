@@ -4,29 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Minesweeper - Game Hub</title>
+  <link rel="stylesheet" href="styles.css" />
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      padding: 20px;
-    }
-
-    h1 {
-      color: #ff6600;
-      margin-bottom: 20px;
-      font-size: 2.5rem;
-      text-shadow: 0 0 10px rgba(255, 102, 0, 0.5);
+    :root {
+      --game-accent: #ff6600;
+      --game-accent-rgb: 255, 102, 0;
     }
 
     .game-wrapper {
@@ -46,9 +28,6 @@
     }
 
     #gameCanvas {
-      border: 3px solid #ff6600;
-      border-radius: 10px;
-      box-shadow: 0 0 20px rgba(255, 102, 0, 0.3);
       cursor: pointer;
     }
 
@@ -63,15 +42,8 @@
       min-width: 180px;
     }
 
-    .info-box {
-      background: rgba(0, 0, 0, 0.3);
-      padding: 15px 20px;
-      border-radius: 10px;
-      text-align: center;
-    }
-
     .info-box h3 {
-      color: #ff6600;
+      color: var(--game-accent);
       font-size: 0.9rem;
       margin-bottom: 5px;
     }
@@ -90,7 +62,7 @@
     }
 
     .difficulty-selector h3 {
-      color: #ff6600;
+      color: var(--game-accent);
       font-size: 0.9rem;
       margin-bottom: 5px;
     }
@@ -104,179 +76,13 @@
       transition: transform 0.2s, box-shadow 0.2s;
     }
 
-    .difficulty-btn.easy {
-      background: #00ff88;
-      color: #1a1a2e;
-    }
-
-    .difficulty-btn.medium {
-      background: #ffaa00;
-      color: #1a1a2e;
-    }
-
-    .difficulty-btn.hard {
-      background: #ff4444;
-      color: #fff;
-    }
+    .difficulty-btn.easy   { background: #00ff88; color: #1a1a2e; }
+    .difficulty-btn.medium { background: #ffaa00; color: #1a1a2e; }
+    .difficulty-btn.hard   { background: #ff4444; color: #fff; }
 
     .difficulty-btn:hover {
       transform: scale(1.05);
       box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-    }
-
-    .controls {
-      margin-top: 20px;
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .controls button {
-      padding: 12px 30px;
-      font-size: 1rem;
-      border: none;
-      border-radius: 25px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    #newGameBtn {
-      background: linear-gradient(135deg, #ff6600 0%, #cc5200 100%);
-      color: white;
-    }
-
-    #newGameBtn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 5px 20px rgba(255, 102, 0, 0.4);
-    }
-
-    #backBtn {
-      background: #666;
-      color: white;
-    }
-
-    #backBtn:hover {
-      box-shadow: 0 5px 20px rgba(102, 102, 102, 0.4);
-    }
-
-    .game-over {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.95);
-      padding: 40px 60px;
-      border-radius: 20px;
-      border: 2px solid #ff4444;
-      text-align: center;
-      display: none;
-      z-index: 1000;
-    }
-
-    .game-over.win {
-      border-color: #00ff00;
-    }
-
-    .game-over h2 {
-      font-size: 2rem;
-      margin-bottom: 15px;
-    }
-
-    .game-over.lose h2 {
-      color: #ff4444;
-    }
-
-    .game-over.win h2 {
-      color: #00ff00;
-    }
-
-    .game-over p {
-      color: #fff;
-      font-size: 1.2rem;
-      margin-bottom: 20px;
-    }
-
-    .game-over span {
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: #ffaa00;
-    }
-
-    .game-over .win-btn {
-      padding: 12px 40px;
-      font-size: 1.1rem;
-      background: #00ff00;
-      color: #1a1a2e;
-      border: none;
-      border-radius: 25px;
-      cursor: pointer;
-      font-weight: 600;
-      margin-top: 15px;
-    }
-
-    .game-over .win-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 5px 20px rgba(0, 255, 0, 0.4);
-    }
-
-    .instructions {
-      margin-top: 20px;
-      color: #888;
-      text-align: center;
-      font-size: 0.9rem;
-    }
-
-    .instructions p {
-      margin: 5px 0;
-    }
-
-    .instructions kbd {
-      background: #333;
-      padding: 3px 8px;
-      border-radius: 4px;
-      border: 1px solid #555;
-      font-family: monospace;
-    }
-
-    #nameInputContainer {
-      margin-bottom: 20px;
-    }
-
-    #playerName {
-      padding: 10px 20px;
-      font-size: 1rem;
-      border-radius: 10px;
-      border: none;
-      width: 200px;
-      text-align: center;
-    }
-
-    #submitScoreBtn {
-      padding: 10px 30px;
-      font-size: 1rem;
-      background: #ff6600;
-      color: white;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    #submitScoreBtn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    #leaderboardContainer {
-      display: none;
-      margin-bottom: 20px;
-    }
-
-    #leaderboardContainer h3 {
-      color: #ff6600;
-      margin-bottom: 10px;
     }
 
     @media (max-width: 900px) {
@@ -299,11 +105,11 @@
   </style>
 </head>
 <body>
-  <h1>Minesweeper</h1>
+  <h1 class="game-title">Minesweeper</h1>
 
   <div class="game-wrapper">
     <div class="game-board-container">
-      <canvas id="gameCanvas" width="450" height="450"></canvas>
+      <canvas id="gameCanvas" class="game-canvas-border" width="450" height="450"></canvas>
     </div>
 
     <div class="info-panel">
@@ -329,28 +135,32 @@
         <span id="highScore">0</span>
       </div>
 
-      <button id="backBtn">Back to Hub</button>
+      <button id="backBtn" class="btn btn-back btn-sm">Back to Hub</button>
     </div>
   </div>
 
-  <div class="controls">
-    <button id="newGameBtn">New Game</button>
+  <div class="btn-row" style="margin-top:16px;">
+    <button id="newGameBtn" class="btn btn-primary">New Game</button>
   </div>
 
-  <div class="instructions">
+  <div class="controls-hint">
     <p><kbd>Left Click</kbd> to reveal a cell</p>
     <p><kbd>Right Click</kbd> to flag/unflag a mine</p>
   </div>
 
-  <div class="game-over" id="gameOver">
-    <h2 id="gameOverText">Game Over!</h2>
-    <p>Time: <span id="finalTime">0</span> seconds</p>
-    <div id="nameInputContainer">
-      <input type="text" id="playerName" placeholder="Enter your name" maxlength="15" style="padding: 10px; font-size: 1rem; border-radius: 10px; border: none; width: 200px; text-align: center;">
+  <div class="gh-modal-backdrop hidden" id="gameOver">
+    <div class="gh-modal">
+      <h2 id="gameOverText">Game Over!</h2>
+      <p class="score-label">Time: <span id="finalTime">0</span> seconds</p>
+      <div id="nameInputContainer" class="name-input-wrap">
+        <input type="text" id="playerName" placeholder="Enter your name" maxlength="15">
+      </div>
+      <div id="leaderboardContainer" class="leaderboard-wrap hidden"></div>
+      <div class="btn-row" style="justify-content:center;">
+        <button id="submitScoreBtn" class="btn btn-primary" disabled>Submit Score</button>
+        <button id="playAgainBtn" class="btn btn-secondary hidden">Play Again</button>
+      </div>
     </div>
-    <div id="leaderboardContainer"></div>
-    <button id="submitScoreBtn" style="margin-bottom: 10px; padding: 10px 30px; font-size: 1rem; background: #ff6600; color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: 600;">Submit Score</button>
-    <button id="playAgainBtn" class="win-btn" style="display: none; padding: 12px 40px; font-size: 1.1rem; background: #00ff00; color: #1a1a2e; border: none; border-radius: 25px; cursor: pointer; font-weight: 600;">Play Again</button>
   </div>
 
   <script src="leaderboard.js"></script>
@@ -412,7 +222,7 @@
       timeElapsed = 0;
       timerEl.textContent = '0';
       isGameOver = false;
-      gameOverDiv.style.display = 'none';
+      gameOverDiv.classList.add('hidden');
       firstClick = true;
       gameRunning = true;
 
@@ -616,7 +426,6 @@
 
       if (win) {
         gameOverText.textContent = 'You Win!';
-        gameOverDiv.className = 'game-over win';
 
         if (highScore === 0 || timeElapsed < highScore) {
           highScore = timeElapsed;
@@ -624,44 +433,42 @@
           highScoreEl.textContent = highScore;
         }
 
-        nameInputContainer.style.display = 'block';
+        nameInputContainer.classList.remove('hidden');
         submitScoreBtn.disabled = true;
-        submitScoreBtn.style.opacity = '0.5';
-        playAgainBtn.style.display = 'none';
+        playAgainBtn.classList.add('hidden');
 
         const existingLeaderboard = Leaderboard.get(GAME_NAME);
         if (existingLeaderboard && existingLeaderboard.length > 0) {
-          leaderboardContainer.style.display = 'block';
-          leaderboardContainer.innerHTML = '<h3 style="color: #ff6600; margin-bottom: 10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
+          leaderboardContainer.classList.remove('hidden');
+          leaderboardContainer.innerHTML = '<h3 class="text-accent" style="margin-bottom:10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
           submitScoreBtn.textContent = 'View Leaderboard';
           submitScoreBtn.onclick = showLeaderboard;
         } else {
-          leaderboardContainer.style.display = 'none';
+          leaderboardContainer.classList.add('hidden');
           submitScoreBtn.textContent = 'Submit Score';
           submitScoreBtn.onclick = submitScore;
         }
       } else {
         gameOverText.textContent = 'Game Over!';
-        gameOverDiv.className = 'game-over lose';
-        playAgainBtn.style.display = 'inline-block';
+        playAgainBtn.classList.remove('hidden');
       }
 
-      gameOverDiv.style.display = 'block';
+      gameOverDiv.classList.remove('hidden');
     }
 
     function submitScore() {
       const name = playerNameInput.value.trim();
       if (!name) return;
       Leaderboard.addScore(GAME_NAME, name, timeElapsed);
-      nameInputContainer.style.display = 'none';
-      leaderboardContainer.style.display = 'block';
-      leaderboardContainer.innerHTML = '<h3 style="color: #ff6600; margin-bottom: 10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
+      nameInputContainer.classList.add('hidden');
+      leaderboardContainer.classList.remove('hidden');
+      leaderboardContainer.innerHTML = '<h3 class="text-accent" style="margin-bottom:10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
       submitScoreBtn.textContent = 'View Leaderboard';
       submitScoreBtn.onclick = showLeaderboard;
     }
 
     function showLeaderboard() {
-      leaderboardContainer.style.display = 'block';
+      leaderboardContainer.classList.remove('hidden');
       submitScoreBtn.textContent = 'View Leaderboard';
       submitScoreBtn.onclick = showLeaderboard;
     }
@@ -697,7 +504,6 @@
 
     playerNameInput.addEventListener('input', () => {
       submitScoreBtn.disabled = !playerNameInput.value.trim();
-      submitScoreBtn.style.opacity = playerNameInput.value.trim() ? '1' : '0.5';
     });
 
     // Initialize
