@@ -267,8 +267,10 @@ class GameRoom {
 
         case 'game-move':
           if (this._isHost) {
-            // Relay to all other peers, then emit locally
-            this._broadcast(msg);
+            // Relay to all OTHER peers (not back to sender)
+            Object.values(this._conns).forEach(c => {
+              if (c !== conn && c.open) { try { c.send(msg); } catch(e){} }
+            });
           }
           this._emit('game-move', { player: msg.player, data: msg.data });
           break;
