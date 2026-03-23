@@ -1,4 +1,4 @@
-name: Deploy to negiadventures.github.io
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -6,55 +6,38 @@ on:
       - main
   workflow_dispatch:
 
+# Grant only the permissions required for Pages deployment.
+# The built-in GITHUB_TOKEN is used — no PAT or cross-repo write access needed.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment; do not cancel in-progress runs.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Checkout gamehub repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy static assets to negiadventures.github.io
-        env:
-          # A Personal Access Token with 'repo' scope must be stored as
-          # the secret PAGES_DEPLOY_TOKEN in the gamehub repository settings.
-          # The token must have write access to negiadventures/negiadventures.github.io.
-          DEPLOY_TOKEN: ${{ secrets.PAGES_DEPLOY_TOKEN }}
-          TARGET_REPO: negiadventures/negiadventures.github.io
-          TARGET_BRANCH: main
-        run: |
-          # Configure git
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
 
-          # Use credential helper to avoid token appearing in log output
-          git config --global credential.helper store
-          echo "https://x-access-token:${DEPLOY_TOKEN}@github.com" > ~/.git-credentials
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Deploy all static assets from the repo root.
+          path: '.'
 
-          # Clone the target public repository
-          git clone --depth=1 \
-            "https://github.com/${TARGET_REPO}.git" \
-            target-repo
-
-          # Copy all static assets (excluding .git, .github metadata and
-          # files that live only in the target repo such as CNAME or 404.html)
-          rsync -av --delete \
-            --exclude=".git/" \
-            --exclude=".github/" \
-            --exclude=".DS_Store" \
-            --exclude="CNAME" \
-            --exclude="404.html" \
-            --exclude="target-repo/" \
-            ./ target-repo/
-
-          # Commit and push
-          cd target-repo
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No changes to deploy."
-            exit 0
-          fi
-          git commit -m "Deploy gamehub assets from negiadventures/gamehub@${{ github.sha }}"
-          git push origin "${TARGET_BRANCH}"
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
