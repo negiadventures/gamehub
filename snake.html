@@ -379,7 +379,7 @@
       onlinePlayers.forEach(p => { raceScores[p.id] = { name: p.name || 'Player', avatar: p.avatar || '🎮', score: 0, done: false }; });
       ghRoom = new GameRoom();
       if (sessionData.role === 'host') {
-        ghRoom.create(GAME_NAME, sessionData.settings || {}, onRoomEvent);
+        ghRoom.create(GAME_NAME, sessionData.settings || {}, onRoomEvent, sessionData.code);
       } else {
         ghRoom.join(sessionData.code, sessionData.player, onRoomEvent);
       }

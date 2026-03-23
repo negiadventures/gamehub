@@ -184,7 +184,7 @@
 
     ghRoom = new GameRoom();
     if (sessionData.role === 'host') {
-      ghRoom.create(GAME_NAME, sessionData.settings || {}, onRoomEvent);
+      ghRoom.create(GAME_NAME, sessionData.settings || {}, onRoomEvent, sessionData.code);
     } else {
       ghRoom.join(sessionData.code, sessionData.player, onRoomEvent);
     }
