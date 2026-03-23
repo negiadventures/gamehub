@@ -1,0 +1,40 @@
+name: Publish Compiled Assets
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Package static assets
+        run: |
+          zip -r gamehub-assets.zip . \
+            --exclude ".git/*" \
+            --exclude ".github/*" \
+            --exclude ".DS_Store"
+
+      - name: Create or update 'latest' GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Create the release if it does not already exist (ignore error if it does)
+          gh release create latest \
+            --repo ${{ github.repository }} \
+            --title "Latest Compiled Assets" \
+            --notes "Auto-published compiled assets from commit ${{ github.sha }}. Download \`gamehub-assets.zip\` to get the latest static files." \
+            --latest || true
+          # Upload (or replace) the asset, preserving the release URL
+          gh release upload latest gamehub-assets.zip \
+            --repo ${{ github.repository }} \
+            --clobber

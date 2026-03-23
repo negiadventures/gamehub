@@ -1,0 +1,53 @@
+name: Deploy to negiadventures.github.io
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout gamehub repository
+        uses: actions/checkout@v4
+
+      - name: Deploy static assets to negiadventures.github.io
+        env:
+          # A Personal Access Token with 'repo' scope must be stored as
+          # the secret PAGES_DEPLOY_TOKEN in the gamehub repository settings.
+          # The token must have write access to negiadventures/negiadventures.github.io.
+          DEPLOY_TOKEN: ${{ secrets.PAGES_DEPLOY_TOKEN }}
+          TARGET_REPO: negiadventures/negiadventures.github.io
+          TARGET_BRANCH: main
+        run: |
+          # Configure git
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Clone the target public repository
+          git clone --depth=1 \
+            "https://x-access-token:${DEPLOY_TOKEN}@github.com/${TARGET_REPO}.git" \
+            target-repo
+
+          # Copy all static assets (excluding .git and .github metadata)
+          rsync -av --delete \
+            --exclude=".git/" \
+            --exclude=".github/" \
+            --exclude=".DS_Store" \
+            --exclude="target-repo/" \
+            ./ target-repo/
+
+          # Commit and push
+          cd target-repo
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to deploy."
+            exit 0
+          fi
+          git commit -m "Deploy gamehub assets from negiadventures/gamehub@${{ github.sha }}"
+          git push origin "${TARGET_BRANCH}"
