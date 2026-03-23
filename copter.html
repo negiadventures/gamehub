@@ -10,74 +10,41 @@
       --game-accent: #00d4ff;
       --game-accent-rgb: 0, 212, 255;
     }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 100%);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      overflow: hidden;
-    }
-    h1 { color: #00d4ff; margin-bottom: 10px; font-size: 2rem; text-shadow: 0 0 10px rgba(0, 212, 255, 0.5); }
-    .game-info { display: flex; gap: 30px; margin-bottom: 10px; font-size: 1.1rem; color: #fff; }
-    .game-info span { color: #00d4ff; font-weight: bold; }
-    #gameCanvas {
-      border: 3px solid #00d4ff;
-      border-radius: 10px;
-      box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
-      cursor: pointer;
-    }
-    .instructions { margin-top: 15px; color: #aaa; text-align: center; font-size: 0.9rem; }
-    .instructions kbd { background: #333; padding: 3px 8px; border-radius: 4px; border: 1px solid #555; font-family: monospace; color: #00d4ff; }
-    #startBtn { margin-top: 15px; padding: 12px 32px; font-size: 1rem; font-weight: 700; background: #00d4ff; color: #0c0c0c; border: none; border-radius: 50px; cursor: pointer; transition: all 0.25s ease; }
-    #startBtn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 212, 255, 0.5); }
-    .game-over { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0, 0, 0, 0.9); padding: 35px 50px; border-radius: 15px; border: 2px solid #ff4444; text-align: center; display: none; }
-    .game-over h2 { color: #ff4444; font-size: 1.8rem; margin-bottom: 15px; }
-    .game-over p { color: #fff; font-size: 1.1rem; margin-bottom: 15px; }
-    .game-over button { padding: 12px 32px; font-size: 1rem; font-weight: 700; background: #00d4ff; color: #0c0c0c; border: none; border-radius: 50px; cursor: pointer; transition: all 0.25s ease; margin: 5px; }
-    #backBtn { margin-top: 10px; padding: 9px 22px; font-size: 0.9rem; font-weight: 700; background: #444; color: #fff; border: none; border-radius: 50px; cursor: pointer; transition: all 0.25s ease; }
-    #backBtn:hover { background: #555; }
-    .pause-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); padding: 30px 50px; border-radius: 10px; border: 2px solid #00d4ff; text-align: center; display: none; }
-    .pause-overlay h2 { color: #00d4ff; font-size: 2rem; }
-    #nameInputContainer { margin-bottom: 20px; }
-    #nameInputContainer input { padding: 10px; font-size: 1rem; border-radius: 10px; border: none; width: 200px; text-align: center; }
-    #leaderboardContainer { display: none; margin-bottom: 20px; }
-    .leaderboard-table { width: 100%; color: #fff; border-collapse: collapse; margin-top: 10px; }
-    .leaderboard-table th { color: #00d4ff; padding: 8px; border-bottom: 1px solid #444; text-align: left; }
-    .leaderboard-table td { padding: 8px; border-bottom: 1px solid #333; }
-    .leaderboard-table tr:first-child td:first-child { color: #FFD700; }
-    .leaderboard-table tr:nth-child(2) td:first-child { color: #C0C0C0; }
-    .leaderboard-table tr:nth-child(3) td:first-child { color: #CD7F32; }
+    #gameCanvas { cursor: pointer; }
   </style>
 </head>
 <body>
-  <h1>Copter Game</h1>
-  <div class="game-info">
-    <div>Score: <span id="score">0</span></div>
-    <div>High Score: <span id="highScore">0</span></div>
+  <h1 class="game-title">Copter Game</h1>
+  <div class="game-info-bar">
+    <div><span class="info-label">Score</span><span class="info-value" id="score">0</span></div>
+    <div><span class="info-label">High Score</span><span class="info-value" id="highScore">0</span></div>
   </div>
-  <canvas id="gameCanvas" width="400" height="600"></canvas>
-  <div class="instructions">
+  <div class="canvas-wrap">
+    <canvas id="gameCanvas" class="game-canvas-border" width="400" height="600"></canvas>
+    <div class="pause-overlay hidden" id="pauseOverlay">
+      <h2>PAUSED</h2>
+    </div>
+  </div>
+  <div class="controls-hint">
     <p><kbd>Click</kbd> or <kbd>Hold Space</kbd> to fly up | <kbd>Release</kbd> to fall | Avoid the planes!</p>
   </div>
-  <button id="startBtn">Start Game</button>
-  <button id="backBtn">Back to Hub</button>
-  <div class="game-over" id="gameOver">
-    <h2>Game Over!</h2>
-    <p>Score: <span id="finalScore">0</span></p>
-    <div id="nameInputContainer" style="margin-bottom: 20px;">
-      <input type="text" id="playerName" placeholder="Enter your name" maxlength="15" style="padding: 10px; font-size: 1rem; border-radius: 10px; border: none; width: 200px; text-align: center;">
-    </div>
-    <div id="leaderboardContainer" style="display: none; margin-bottom: 20px;"></div>
-    <button id="submitScoreBtn" style="margin-bottom: 10px;">Submit Score</button>
-    <button id="restartBtn">Play Again</button>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="startBtn">Start Game</button>
+    <button class="btn btn-back btn-sm" id="backBtn">← Hub</button>
   </div>
-  <div class="pause-overlay" id="pauseOverlay">
-    <h2>PAUSED</h2>
+  <div class="gh-modal-backdrop hidden" id="gameOver">
+    <div class="gh-modal">
+      <h2>Game Over!</h2>
+      <p class="score-label">Score: <span id="finalScore">0</span></p>
+      <div id="nameInputContainer" class="name-input-wrap">
+        <input type="text" id="playerName" placeholder="Enter your name" maxlength="15" />
+      </div>
+      <div id="leaderboardContainer" class="leaderboard-wrap hidden"></div>
+      <div class="btn-row" style="justify-content:center;">
+        <button class="btn btn-primary" id="submitScoreBtn" disabled>Submit Score</button>
+        <button class="btn btn-secondary" id="restartBtn">Play Again</button>
+      </div>
+    </div>
   </div>
   <script src="leaderboard.js"></script>
   <script>
@@ -126,8 +93,8 @@
       isPaused = false;
       isHolding = false;
       scoreElement.textContent = score;
-      gameOverDiv.style.display = 'none';
-      pauseOverlay.style.display = 'none';
+      gameOverDiv.classList.add('hidden');
+      pauseOverlay.classList.add('hidden');
     }
 
     function drawCopter() {
@@ -284,28 +251,27 @@
       clearInterval(gameLoop);
       if (score > highScore) { highScore = score; localStorage.setItem('copterHighScore', highScore); highScoreElement.textContent = highScore; }
       finalScoreElement.textContent = score;
-      gameOverDiv.style.display = 'block';
-      startBtn.style.display = 'none';
+      gameOverDiv.classList.remove('hidden');
+      startBtn.classList.add('hidden');
       playerNameInput.value = '';
-      nameInputContainer.style.display = 'block';
+      nameInputContainer.classList.remove('hidden');
       submitScoreBtn.disabled = true;
-      submitScoreBtn.style.opacity = '0.5';
       // Show leaderboard if there are existing scores
       const existingLeaderboard = Leaderboard.get(GAME_NAME);
       if (existingLeaderboard && existingLeaderboard.length > 0) {
-        leaderboardContainer.style.display = 'block';
-        leaderboardContainer.innerHTML = '<h3 style="color: #00d4ff; margin-bottom: 10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
+        leaderboardContainer.classList.remove('hidden');
+        leaderboardContainer.innerHTML = '<h3 class="text-accent" style="margin-bottom:10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
         submitScoreBtn.textContent = 'View Leaderboard';
         submitScoreBtn.onclick = showLeaderboard;
       } else {
-        leaderboardContainer.style.display = 'none';
+        leaderboardContainer.classList.add('hidden');
         submitScoreBtn.textContent = 'Submit Score';
         submitScoreBtn.onclick = submitScore;
       }
     }
 
     function showLeaderboard() {
-      leaderboardContainer.style.display = 'block';
+      leaderboardContainer.classList.remove('hidden');
       submitScoreBtn.textContent = 'View Leaderboard';
       submitScoreBtn.onclick = showLeaderboard;
     }
@@ -314,14 +280,14 @@
       if (isGameRunning) return;
       initGame();
       isGameRunning = true;
-      startBtn.style.display = 'none';
+      startBtn.classList.add('hidden');
       gameLoop = setInterval(update, 1000 / 60);
     }
 
     function togglePause() {
       if (!isGameRunning) return;
       isPaused = !isPaused;
-      if (isPaused) { pauseOverlay.style.display = 'block'; } else { pauseOverlay.style.display = 'none'; }
+      if (isPaused) { pauseOverlay.classList.remove('hidden'); } else { pauseOverlay.classList.add('hidden'); }
     }
 
     function handleHoldStart(e) { if (e) e.preventDefault(); if (!isGameRunning || isPaused) return; isHolding = true; }
@@ -334,7 +300,7 @@
     canvas.addEventListener('touchend', handleHoldEnd, { passive: false });
 
     document.addEventListener('keydown', (e) => {
-      if (e.code === 'Space') { e.preventDefault(); if (!isGameRunning && gameOverDiv.style.display === 'none') { startGame(); } else if (isGameRunning) { handleHoldStart(e); } }
+      if (e.code === 'Space') { e.preventDefault(); if (!isGameRunning && gameOverDiv.classList.contains('hidden')) { startGame(); } else if (isGameRunning) { handleHoldStart(e); } }
       if (e.code === 'KeyP') { togglePause(); }
     });
     document.addEventListener('keyup', (e) => { if (e.code === 'Space') { handleHoldEnd(e); } });
@@ -343,21 +309,15 @@
     restartBtn.addEventListener('click', startGame);
     backBtn.addEventListener('click', () => window.location.href = 'index.html');
     submitScoreBtn.addEventListener('click', submitScore);
-    playerNameInput.addEventListener('input', () => { submitScoreBtn.disabled = !playerNameInput.value.trim(); submitScoreBtn.style.opacity = submitScoreBtn.disabled ? '0.5' : '1'; });
+    playerNameInput.addEventListener('input', () => { submitScoreBtn.disabled = !playerNameInput.value.trim(); });
 
     function submitScore() {
       const name = playerNameInput.value.trim();
       if (!name) return;
       const leaderboard = Leaderboard.addScore(GAME_NAME, name, score);
-      nameInputContainer.style.display = 'none';
-      leaderboardContainer.style.display = 'block';
-      leaderboardContainer.innerHTML = '<h3 style="color: #00d4ff; margin-bottom: 10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
-      submitScoreBtn.textContent = 'View Leaderboard';
-      submitScoreBtn.onclick = showLeaderboard;
-    }
-
-    function showLeaderboard() {
-      leaderboardContainer.style.display = 'block';
+      nameInputContainer.classList.add('hidden');
+      leaderboardContainer.classList.remove('hidden');
+      leaderboardContainer.innerHTML = '<h3 class="text-accent" style="margin-bottom:10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
       submitScoreBtn.textContent = 'View Leaderboard';
       submitScoreBtn.onclick = showLeaderboard;
     }
