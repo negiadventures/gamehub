@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculator – Game Hub</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #e94560;
+      font-size: 2rem;
+      margin-bottom: 24px;
+      text-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+    }
+
+    .calculator {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 24px;
+      width: 320px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .display {
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 12px;
+      padding: 16px 20px;
+      text-align: right;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .display .expression {
+      color: #888;
+      font-size: 0.85rem;
+      min-height: 1.2em;
+      word-break: break-all;
+      margin-bottom: 4px;
+    }
+
+    .display .current {
+      color: #fff;
+      font-size: 2.2rem;
+      font-weight: 300;
+      word-break: break-all;
+      line-height: 1.2;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    button {
+      padding: 18px 10px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s, background 0.15s;
+      outline: none;
+    }
+
+    button:active { transform: scale(0.93); }
+
+    /* Number buttons */
+    .btn-num {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+    .btn-num:hover { background: rgba(255, 255, 255, 0.18); }
+
+    /* Operator buttons */
+    .btn-op {
+      background: rgba(233, 69, 96, 0.25);
+      color: #e94560;
+      border: 1px solid rgba(233, 69, 96, 0.3);
+    }
+    .btn-op:hover { background: rgba(233, 69, 96, 0.4); }
+
+    /* Equals button */
+    .btn-eq {
+      background: linear-gradient(135deg, #e94560 0%, #c73e54 100%);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(233, 69, 96, 0.35);
+    }
+    .btn-eq:hover { box-shadow: 0 6px 20px rgba(233, 69, 96, 0.55); }
+
+    /* Clear / special buttons */
+    .btn-clear {
+      background: rgba(255, 136, 68, 0.25);
+      color: #ff8844;
+      border: 1px solid rgba(255, 136, 68, 0.3);
+    }
+    .btn-clear:hover { background: rgba(255, 136, 68, 0.4); }
+
+    /* Span two columns */
+    .span2 { grid-column: span 2; }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 24px;
+      color: #888;
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: #e94560; }
+  </style>
+</head>
+<body>
+  <h1>🧮 Calculator</h1>
+
+  <div class="calculator">
+    <div class="display">
+      <div class="expression" id="expression"></div>
+      <div class="current" id="current">0</div>
+    </div>
+
+    <div class="buttons">
+      <!-- Row 1 -->
+      <button class="btn-clear" onclick="clearAll()">AC</button>
+      <button class="btn-clear" onclick="toggleSign()">+/−</button>
+      <button class="btn-clear" onclick="percent()">%</button>
+      <button class="btn-op"    onclick="inputOp('/')">÷</button>
+
+      <!-- Row 2 -->
+      <button class="btn-num" onclick="inputDigit('7')">7</button>
+      <button class="btn-num" onclick="inputDigit('8')">8</button>
+      <button class="btn-num" onclick="inputDigit('9')">9</button>
+      <button class="btn-op"  onclick="inputOp('*')">×</button>
+
+      <!-- Row 3 -->
+      <button class="btn-num" onclick="inputDigit('4')">4</button>
+      <button class="btn-num" onclick="inputDigit('5')">5</button>
+      <button class="btn-num" onclick="inputDigit('6')">6</button>
+      <button class="btn-op"  onclick="inputOp('-')">−</button>
+
+      <!-- Row 4 -->
+      <button class="btn-num" onclick="inputDigit('1')">1</button>
+      <button class="btn-num" onclick="inputDigit('2')">2</button>
+      <button class="btn-num" onclick="inputDigit('3')">3</button>
+      <button class="btn-op"  onclick="inputOp('+')">+</button>
+
+      <!-- Row 5 -->
+      <button class="btn-num span2" onclick="inputDigit('0')">0</button>
+      <button class="btn-num"       onclick="inputDecimal()">.</button>
+      <button class="btn-eq"        onclick="calculate()">=</button>
+    </div>
+  </div>
+
+  <a href="index.html" class="back-link">← Back to Game Hub</a>
+
+  <script>
+    let currentValue  = '0';
+    let operator      = null;
+    let firstOperand  = null;
+    let waitingForSecond = false;
+
+    const currentEl    = document.getElementById('current');
+    const expressionEl = document.getElementById('expression');
+
+    function updateDisplay() {
+      currentEl.textContent = currentValue;
+    }
+
+    function inputDigit(digit) {
+      if (waitingForSecond) {
+        currentValue = digit;
+        waitingForSecond = false;
+      } else {
+        currentValue = currentValue === '0' ? digit : currentValue + digit;
+      }
+      updateDisplay();
+    }
+
+    function inputDecimal() {
+      if (waitingForSecond) {
+        currentValue = '0.';
+        waitingForSecond = false;
+        updateDisplay();
+        return;
+      }
+      if (!currentValue.includes('.')) {
+        currentValue += '.';
+        updateDisplay();
+      }
+    }
+
+    function inputOp(op) {
+      const value = parseFloat(currentValue);
+
+      if (firstOperand !== null && !waitingForSecond) {
+        const result = compute(firstOperand, value, operator);
+        currentValue = formatResult(result);
+        firstOperand = result;
+      } else {
+        firstOperand = value;
+      }
+
+      operator = op;
+      waitingForSecond = true;
+
+      const opSymbol = { '+': '+', '-': '−', '*': '×', '/': '÷' }[op];
+      expressionEl.textContent = formatResult(firstOperand) + ' ' + opSymbol;
+      updateDisplay();
+    }
+
+    function calculate() {
+      if (operator === null || firstOperand === null) return;
+      const second = parseFloat(currentValue);
+      const opSymbol = { '+': '+', '-': '−', '*': '×', '/': '÷' }[operator];
+      expressionEl.textContent =
+        formatResult(firstOperand) + ' ' + opSymbol + ' ' + formatResult(second) + ' =';
+      const result = compute(firstOperand, second, operator);
+      currentValue = formatResult(result);
+      operator = null;
+      firstOperand = null;
+      waitingForSecond = false;
+      updateDisplay();
+    }
+
+    function compute(a, b, op) {
+      switch (op) {
+        case '+': return a + b;
+        case '-': return a - b;
+        case '*': return a * b;
+        case '/': return b !== 0 ? a / b : 'Error';
+        default:  return b;
+      }
+    }
+
+    function formatResult(value) {
+      if (value === 'Error') return 'Error';
+      const num = parseFloat(value);
+      if (isNaN(num)) return 'Error';
+      // Avoid floating-point noise by rounding to 10 significant digits
+      return parseFloat(num.toPrecision(10)).toString();
+    }
+
+    function clearAll() {
+      currentValue = '0';
+      operator = null;
+      firstOperand = null;
+      waitingForSecond = false;
+      expressionEl.textContent = '';
+      updateDisplay();
+    }
+
+    function toggleSign() {
+      const num = parseFloat(currentValue);
+      if (!isNaN(num) && num !== 0) {
+        // Preserve trailing decimal point if present
+        const hasTrailingDot = currentValue.endsWith('.');
+        currentValue = (num * -1).toString() + (hasTrailingDot ? '.' : '');
+      } else if (currentValue.endsWith('.')) {
+        currentValue = '-0.';
+      }
+      updateDisplay();
+    }
+
+    function percent() {
+      const num = parseFloat(currentValue);
+      if (!isNaN(num)) {
+        currentValue = formatResult(num / 100);
+        updateDisplay();
+      }
+    }
+
+    // Keyboard support
+    document.addEventListener('keydown', e => {
+      if (e.key >= '0' && e.key <= '9') inputDigit(e.key);
+      else if (e.key === '.')  inputDecimal();
+      else if (e.key === '+')  inputOp('+');
+      else if (e.key === '-')  inputOp('-');
+      else if (e.key === '*')  inputOp('*');
+      else if (e.key === '/')  { e.preventDefault(); inputOp('/'); }
+      else if (e.key === 'Enter' || e.key === '=') calculate();
+      else if (e.key === 'Backspace') {
+        if (currentValue.length > 1) {
+          const trimmed = currentValue.slice(0, -1);
+          // Don't leave just a minus sign
+          currentValue = (trimmed === '-' || trimmed === '') ? '0' : trimmed;
+        } else {
+          currentValue = '0';
+        }
+        updateDisplay();
+      }
+      else if (e.key === 'Escape') clearAll();
+    });
+  </script>
+</body>
+</html>
