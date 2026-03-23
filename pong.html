@@ -151,6 +151,8 @@
     onlinePlayerInfoEl.classList.remove('hidden');
     renderOnlinePlayers();
 
+    startBtn.classList.add('hidden');   // auto-started via room events
+
     ghRoom = new GameRoom();
     if (sessionData.role === 'host') {
       ghRoom.create(GAME_NAME, sessionData.settings||{}, onRoomEvent, sessionData.code);
@@ -173,8 +175,18 @@
   }
 
   function onRoomEvent(event, data) {
-    if (event === 'connected') { remotePlayers = ghRoom.players; renderOnlinePlayers(); }
-    if (event === 'room-update') { remotePlayers = data.players||remotePlayers; renderOnlinePlayers(); }
+    if (event === 'connected') {
+      remotePlayers = ghRoom.players;
+      renderOnlinePlayers();
+      if (myPaddle === 2) startGame();   // guest auto-starts when connected to host
+    }
+    if (event === 'room-update') {
+      remotePlayers = data.players||remotePlayers;
+      renderOnlinePlayers();
+      if (myPaddle === 1 && remotePlayers.length >= 2 && !gameRunning) {
+        startGame();   // host auto-starts when guest connects
+      }
+    }
     if (event === 'game-move') {
       const d = data.data;
       if (d.type === 'paddle') {
@@ -318,6 +330,7 @@
 
   /* ── Game flow ── */
   function startGame() {
+    cancelAnimationFrame(animId);   // cancel any running loop before restarting
     p1.score=0; p2.score=0; p1.y=canvas.height/2-PADDLE_H/2; p2.y=canvas.height/2-PADDLE_H/2;
     p1ScoreEl.textContent='0'; p2ScoreEl.textContent='0';
     gameOverDiv.classList.add('hidden');

@@ -148,6 +148,7 @@
 
   /* Online: shared card order is set by host and sent to guest */
   let sharedOrder = [];
+  let sharedOrderSent = false;  // guard: only send card order once per game
 
   function checkOnlineMode() {
     const s = sessionStorage.getItem('gh_room');
@@ -178,13 +179,20 @@
       remotePlayers = ghRoom.players;
       renderPlayerScores();
       if (isHost) {
-        // Generate and share card order when connected
+        // Generate card order locally; send to guest once they connect
         sharedOrder = generateOrder();
-        ghRoom.sendState({ order: sharedOrder });
         newGame(sharedOrder);
       }
     }
-    if (event === 'room-update') { remotePlayers = data.players||remotePlayers; renderPlayerScores(); }
+    if (event === 'room-update') {
+      remotePlayers = data.players||remotePlayers;
+      renderPlayerScores();
+      if (isHost && remotePlayers.length >= 2 && sharedOrder.length && !sharedOrderSent) {
+        sharedOrderSent = true;
+        // Share the card order with the newly connected guest
+        ghRoom.sendState({ order: sharedOrder });
+      }
+    }
     if (event === 'game-state') {
       if (!isHost && data.state.order) {
         sharedOrder = data.state.order;
@@ -231,8 +239,8 @@
     const me  = remotePlayers[mySlot];
     const opp = remotePlayers[opponentSlot];
 
-    const myCard  = scoreCard(me,  isHost?myPairs:opponentPairs, isHost?myTurn:!myTurn, '(You)');
-    const oppCard = scoreCard(opp, isHost?opponentPairs:myPairs, isHost?!myTurn:myTurn, '');
+    const myCard  = scoreCard(me,  myPairs,       myTurn,  '(You)');
+    const oppCard = scoreCard(opp, opponentPairs, !myTurn, '');
     playerScoresEl.appendChild(isHost ? myCard : oppCard);
     playerScoresEl.appendChild(isHost ? oppCard : myCard);
   }
