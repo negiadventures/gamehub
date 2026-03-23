@@ -45,7 +45,6 @@
       text-align: center; width: 220px; outline: none; transition: border-color .2s;
     }
     #nameInputContainer input:focus { border-color: var(--game-accent); }
-    #leaderboardContainer { display: none; margin-bottom: 16px; max-height: 200px; overflow-y: auto; }
   </style>
 </head>
 <body>
@@ -83,7 +82,7 @@
       <div id="nameInputContainer">
         <input type="text" id="playerName" placeholder="Enter your name" maxlength="15" />
       </div>
-      <div id="leaderboardContainer"></div>
+      <div id="leaderboardContainer" class="leaderboard-wrap hidden"></div>
       <div class="btn-row" style="justify-content:center;">
         <button class="btn btn-primary" id="submitScoreBtn" disabled>Submit Score</button>
         <button class="btn btn-secondary" id="restartBtn">Play Again</button>
@@ -336,24 +335,24 @@
     }
     gameOverDiv.classList.remove('hidden');
     if (!onlineMode && p1.score >= WIN_SCORE) {
-      nameInputCont.style.display = 'block';
-      submitScoreBtn.disabled = true; submitScoreBtn.style.opacity = '.5';
+      nameInputCont.classList.remove('hidden');
+      submitScoreBtn.disabled = true;
       const ex = Leaderboard.get(GAME_NAME);
       if (ex && ex.length > 0) {
-        leaderboardCont.style.display = 'block';
-        leaderboardCont.innerHTML = '<h3 style="color:var(--game-accent);margin-bottom:8px;">Top Players</h3>' + Leaderboard.render(GAME_NAME);
+        leaderboardCont.classList.remove('hidden');
+        leaderboardCont.innerHTML = '<h3 class="text-accent" style="margin-bottom:8px;">Top Players</h3>' + Leaderboard.render(GAME_NAME);
       }
     } else {
-      nameInputCont.style.display = 'none';
+      nameInputCont.classList.add('hidden');
     }
   }
 
   function submitScore() {
     const name = playerNameIn.value.trim(); if (!name) return;
     Leaderboard.addScore(GAME_NAME, name, p1.score);
-    nameInputCont.style.display = 'none';
-    leaderboardCont.style.display = 'block';
-    leaderboardCont.innerHTML = '<h3 style="color:var(--game-accent);margin-bottom:8px;">Top Players</h3>' + Leaderboard.render(GAME_NAME);
+    nameInputCont.classList.add('hidden');
+    leaderboardCont.classList.remove('hidden');
+    leaderboardCont.innerHTML = '<h3 class="text-accent" style="margin-bottom:8px;">Top Players</h3>' + Leaderboard.render(GAME_NAME);
   }
 
   startBtn.addEventListener('click', startGame);
@@ -362,7 +361,7 @@
   submitScoreBtn.addEventListener('click', submitScore);
   playerNameIn.addEventListener('input', () => {
     const ok = !!playerNameIn.value.trim();
-    submitScoreBtn.disabled = !ok; submitScoreBtn.style.opacity = ok?'1':'.5';
+    submitScoreBtn.disabled = !ok;
   });
   playerNameIn.addEventListener('keypress', e => { if(e.key==='Enter'&&playerNameIn.value.trim()) submitScore(); });
   gameModeSelect.addEventListener('change', () => { isAI = gameModeSelect.value==='ai'; });

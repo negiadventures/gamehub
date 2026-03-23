@@ -146,7 +146,7 @@
       score = 0;
       scoreElement.textContent = score;
       isPaused = false;
-      gameOverDiv.style.display = 'none';
+      gameOverDiv.classList.add('hidden');
     }
 
     function canMove(x, y) {
@@ -406,23 +406,21 @@
 
       finalScoreElement.textContent = score;
       gameOverText.textContent = 'Game Over!';
-      gameOverDiv.className = 'game-over';
-      gameOverDiv.style.display = 'block';
+      gameOverDiv.classList.remove('hidden');
       startBtn.textContent = 'Start Game';
 
       playerNameInput.value = '';
-      nameInputContainer.style.display = 'block';
+      nameInputContainer.classList.remove('hidden');
       submitScoreBtn.disabled = true;
-      submitScoreBtn.style.opacity = '0.5';
 
       const existingLeaderboard = Leaderboard.get(GAME_NAME);
       if (existingLeaderboard && existingLeaderboard.length > 0) {
-        leaderboardContainer.style.display = 'block';
-        leaderboardContainer.innerHTML = '<h3 style="color: #00ff00; margin-bottom: 10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
+        leaderboardContainer.classList.remove('hidden');
+        leaderboardContainer.innerHTML = '<h3 class="text-accent" style="margin-bottom:10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
         submitScoreBtn.textContent = 'View Leaderboard';
         submitScoreBtn.onclick = showLeaderboard;
       } else {
-        leaderboardContainer.style.display = 'none';
+        leaderboardContainer.classList.add('hidden');
         submitScoreBtn.textContent = 'Submit Score';
         submitScoreBtn.onclick = submitScore;
       }
@@ -440,23 +438,21 @@
 
       finalScoreElement.textContent = score;
       gameOverText.textContent = 'You Win!';
-      gameOverDiv.className = 'game-over win';
-      gameOverDiv.style.display = 'block';
+      gameOverDiv.classList.remove('hidden');
       startBtn.textContent = 'Start Game';
 
       playerNameInput.value = '';
-      nameInputContainer.style.display = 'block';
+      nameInputContainer.classList.remove('hidden');
       submitScoreBtn.disabled = true;
-      submitScoreBtn.style.opacity = '0.5';
 
       const existingLeaderboard = Leaderboard.get(GAME_NAME);
       if (existingLeaderboard && existingLeaderboard.length > 0) {
-        leaderboardContainer.style.display = 'block';
-        leaderboardContainer.innerHTML = '<h3 style="color: #00ff00; margin-bottom: 10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
+        leaderboardContainer.classList.remove('hidden');
+        leaderboardContainer.innerHTML = '<h3 class="text-accent" style="margin-bottom:10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
         submitScoreBtn.textContent = 'View Leaderboard';
         submitScoreBtn.onclick = showLeaderboard;
       } else {
-        leaderboardContainer.style.display = 'none';
+        leaderboardContainer.classList.add('hidden');
         submitScoreBtn.textContent = 'Submit Score';
         submitScoreBtn.onclick = submitScore;
       }
@@ -473,7 +469,7 @@
     }
 
     function showLeaderboard() {
-      leaderboardContainer.style.display = 'block';
+      leaderboardContainer.classList.remove('hidden');
       submitScoreBtn.textContent = 'View Leaderboard';
       submitScoreBtn.onclick = showLeaderboard;
     }
@@ -486,9 +482,9 @@
       const name = playerNameInput.value.trim();
       if (!name) return;
       const leaderboard = Leaderboard.addScore(GAME_NAME, name, score);
-      nameInputContainer.style.display = 'none';
-      leaderboardContainer.style.display = 'block';
-      leaderboardContainer.innerHTML = '<h3 style="color: #00ff00; margin-bottom: 10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
+      nameInputContainer.classList.add('hidden');
+      leaderboardContainer.classList.remove('hidden');
+      leaderboardContainer.innerHTML = '<h3 class="text-accent" style="margin-bottom:10px;">Top 10 Players</h3>' + Leaderboard.render(GAME_NAME);
       submitScoreBtn.textContent = 'View Leaderboard';
       submitScoreBtn.onclick = showLeaderboard;
     }
@@ -530,7 +526,6 @@
     });
     playerNameInput.addEventListener('input', () => {
       submitScoreBtn.disabled = !playerNameInput.value.trim();
-      submitScoreBtn.style.opacity = playerNameInput.value.trim() ? '1' : '0.5';
     });
 
     // Initial draw
