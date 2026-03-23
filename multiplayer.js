@@ -104,7 +104,7 @@ class GameRoom {
   }
 
   /* ── Create (host) ───────────────────────────────── */
-  create(gameType, settings, cb) {
+  create(gameType, settings, cb, existingCode = null) {
     this._isHost   = true;
     this._gameType = gameType;
     this._settings = Object.assign({
@@ -113,7 +113,7 @@ class GameRoom {
       botsEnabled: false,
     }, settings);
     this._cb = cb;
-    this._code = generateRoomCode();
+    this._code = existingCode ? existingCode.trim().toUpperCase() : generateRoomCode();
 
     const peerId = peerIdFromCode(this._code);
     this._peer = new Peer(peerId, _peerOptions());
@@ -197,7 +197,8 @@ class GameRoom {
     const msg = { type: 'chat', player: this._player, text, time: Date.now() };
     if (this._isHost) {
       this._broadcast(msg);
-      this._emit('chat', msg);
+      // Do not emit locally here – the caller (lobby.html) appends the message
+      // directly to avoid showing it twice for the host.
     } else {
       if (this._hostConn) this._hostConn.send(msg);
     }
