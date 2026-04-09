@@ -23,7 +23,7 @@ GameHub is a collection of browser-based HTML5 games in a single static site.
 
 This project is static HTML/CSS/JS, so no build step is required.
 
-You can open `/home/runner/work/gamehub/gamehub/index.html` directly in a browser, or serve the folder with any static server.
+You can open `index.html` directly in a browser, or serve the folder with any static server.
 
 ## Project structure
 
