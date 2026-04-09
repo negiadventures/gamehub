@@ -23,7 +23,7 @@ GameHub is a collection of browser-based HTML5 games in a single static site.
 
 This project is static HTML/CSS/JS, so no build step is required.
 
-You can open `index.html` directly in a browser for quick checks, but serving the folder with a static server is the recommended approach for full compatibility.
+You can open `index.html` directly in a browser for quick checks, but serving the folder with a static server is the recommended approach for full compatibility (for example: `python -m http.server`).
 
 ## Project structure
 
